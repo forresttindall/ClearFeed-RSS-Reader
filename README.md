@@ -36,18 +36,18 @@ Clone the repository:
 `` git clone https://github.com/yourusername/clearfeed.git
 cd clearfeed ``
 
-`` # Install backend dependencies
+`` Install backend dependencies
 cd server
 npm install ``
 
-`` # Install frontend dependencies
+`` Install frontend dependencies
 cd ../client
 npm install ``
 
 `` cd rss-feed
 npm start ``
 
-``cd frontend
+`` cd frontend
 npm start ``
 
 The application will be available at http://localhost:3000
