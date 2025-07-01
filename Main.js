@@ -45,7 +45,8 @@ function createWindow() {
             preload: preloadPath,
             sandbox: false,
             devTools: true,
-            worldSafeExecuteJavaScript: true
+            worldSafeExecuteJavaScript: true,
+            webSecurity: false  // Allow loading external content in iframes
         }
     });
 

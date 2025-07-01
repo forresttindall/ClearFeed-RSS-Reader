@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+const { contextBridge, ipcRenderer, shell } = require('electron');
 
 console.log('=== PRELOAD SCRIPT STARTING ===');
 console.log('Process type:', process.type);
@@ -21,6 +21,11 @@ const electronAPI = {
                 throw new Error(`Invalid channel: ${channel}`);
             }
             return await ipcRenderer.invoke(channel, data);
+        }
+    },
+    shell: {
+        openExternal: (url) => {
+            return shell.openExternal(url);
         }
     }
 };

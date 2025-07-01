@@ -548,6 +548,29 @@ function Dashboard() {
                         src={selectedArticle.link}
                         title={selectedArticle.title}
                         className="article-frame"
+                        onError={() => {
+                            console.log('Iframe failed to load, opening in external browser');
+                            window.electron?.shell?.openExternal(selectedArticle.link);
+                        }}
+                        onLoad={(e) => {
+                            // Check if iframe content loaded successfully
+                            try {
+                                const iframe = e.target;
+                                // If we can't access the iframe content due to CORS, open externally
+                                setTimeout(() => {
+                                    try {
+                                        // Try to access iframe content to check for CORS issues
+                                        void iframe.contentDocument;
+                                    } catch (error) {
+                                        console.log('Iframe blocked by CORS, opening in external browser');
+                                        window.electron?.shell?.openExternal(selectedArticle.link);
+                                        setSelectedArticle(null);
+                                    }
+                                }, 1000);
+                            } catch (error) {
+                                console.log('Iframe access error:', error);
+                            }
+                        }}
                     />
                 </div>
             ) : (
