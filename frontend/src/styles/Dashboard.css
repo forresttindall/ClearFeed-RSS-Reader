@@ -1,0 +1,962 @@
+/* Theme variables */
+:root {
+  --background: #ffffff;
+  --text: #1a1a1a;
+  --text-secondary: #666666;
+  --primary: #2c2c2c;
+  --secondary: #d1d1d1;
+  --hover: #c4c4c4;
+  --mono-adjust: 0.9;
+  --switch-bg: #2c2c2c;
+  --switch-border: rgba(255, 255, 255, 0.1);
+  --switch-circle: #ffffff;
+}
+
+/* Dark theme */
+:root.dark {
+  --background: #1a1a1a;
+  --text: #ffffff;
+  --text-secondary: #cccccc;
+  --primary: rgba(255, 255, 255, 0.2);
+  --secondary: #2c2c2c;
+  --hover: #363636;
+  --switch-bg: #1a1a1a;
+  --switch-border: rgba(255, 255, 255, 0.2);
+  --switch-circle: #1a1a1a;
+}
+
+/* Ensure background color is applied to full viewport */
+:root, 
+html, 
+body {
+  background-color: var(--background);
+  min-height: 100vh;
+  margin: 0;
+  padding: 0;
+}
+
+/* Font families */
+.sans {
+  font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+.mono {
+  font-family: 'Geist Mono', monospace;
+}
+
+/* Adjust font sizes for mono */
+.mono h1 {
+  font-size: calc(2rem * var(--mono-adjust));
+}
+
+.mono .article-card h2 {
+  font-size: calc(1.1rem * var(--mono-adjust));
+}
+
+.mono .feed-item {
+  font-size: calc(1rem * var(--mono-adjust));
+}
+
+.dashboard {
+    min-height: 100vh;
+    background-color: var(--background);
+  }
+  
+  .dashboard-wrapper {
+    max-width: 1800px;
+    margin: 0 auto;
+    min-height: 100vh;
+  }
+
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  border-bottom: 1px solid var(--secondary);
+  min-height: 64px;
+}
+
+.navbar h1 {
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--text);
+}
+
+.feed-container {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  height: calc(100vh - 64px);
+}
+
+.feed-list {
+  border-right: 1px solid var(--secondary);
+  height: 100%;
+}
+
+.feed-content {
+  padding: 2rem;
+}
+
+.empty-state {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  color: #666;
+}
+
+/* Feed list styles */
+.feeds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.feed-item {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  text-align: left;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text);
+  border-radius: 6px;
+  margin-bottom: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-item:hover {
+  background-color: var(--hover);
+}
+
+.feed-item.active {
+  background-color: var(--secondary);
+  font-weight: 600;
+}
+
+.add-feed {
+  margin-top: auto;
+}
+
+.add-feed button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: var(--secondary);
+  color: var(--text);
+  font-weight: 500;
+}
+
+.add-feed button:hover {
+  background-color: var(--hover);
+}
+
+/* Article styles */
+.articles-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.article-card {
+    display: flex;
+    background-color: var(--secondary);
+    border: 1px solid var(--secondary);
+    border-radius: 8px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.article-image-container {
+    flex-shrink: 0;
+    width: 200px;
+    height: 140px;
+    overflow: hidden;
+    background-color: var(--secondary);
+    position: relative;
+}
+
+.article-image-container img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.article-card:hover .article-image-container img {
+    transform: scale(1.05);
+}
+
+.article-content {
+    flex: 1;
+    padding: 15px;
+    min-width: 0; /* Prevents flex item from overflowing */
+}
+
+.article-card.read {
+  background-color: var(--secondary); /* Optional: different background for read articles */
+}
+
+.article-card:hover {
+  background-color: var(--hover);
+}
+
+.article-card h2 {
+  font-size: 1.1rem;
+  line-height: 1.4;
+  margin-bottom: 0.5rem;
+}
+
+.article-card h2 a {
+  color: var(--text);
+  text-decoration: none;
+}
+
+.article-card h2 a:hover {
+  text-decoration: underline;
+}
+
+.article-card time {
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Settings styles */
+.settings {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.toggle-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.toggle-label {
+  font-size: 0.9rem;
+  color: var(--text);
+}
+
+/* Toggle Switch */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 36px;
+  height: 20px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: var(--switch-bg);
+  transition: 0.2s;
+  border-radius: 20px;
+  border: 1px solid var(--switch-border);
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 14px;
+  width: 14px;
+  left: 2px;
+  bottom: 2px;
+  background-color: var(--switch-circle);
+  transition: 0.2s;
+  border-radius: 50%;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+input:checked + .slider {
+  background-color: var(--primary);
+}
+
+input:checked + .slider:before {
+  transform: translateX(16px);
+  background-color: var(--switch-circle) !important;
+}
+
+/* Button and input styles */
+button, select, input {
+  font-family: inherit;
+  font-size: inherit;
+  background: var(--secondary);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover, select:hover {
+  background: var(--hover);
+}
+
+/* Button styles */
+button {
+  font-family: inherit;
+  font-size: inherit;
+  background: var(--secondary);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+button:hover {
+  background: var(--hover);
+}
+
+/* Feed Controls */
+.feed-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  height: 100%;
+}
+
+.search-wrapper {
+  position: relative;
+  padding: 0 1rem;
+  margin-top: 1rem;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  background-color: var(--secondary);
+  border-radius: 6px;
+  margin: 0 1rem;
+  width: 300px;
+  flex-shrink: 0;
+}
+
+.search-input {
+  width: 100%;
+  background: none;
+  border: 1px solid var(--hover);
+  border-radius: 6px;
+  color: var(--text);
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  margin-left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.filter-buttons {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0 1rem;
+}
+
+.filter-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background-color: var(--secondary);
+  color: var(--text);
+  border-radius: 6px;
+}
+
+.filter-btn:hover {
+  background-color: var(--hover);
+}
+
+.filter-btn.active {
+  background-color: var(--primary);
+  color: var(--background);
+}
+
+.add-feed-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 1rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--secondary);
+  color: var(--text);
+  border-radius: 6px;
+  border: 1px solid var(--secondary);
+}
+
+.add-feed-btn:hover {
+  background-color: var(--hover);
+}
+
+.feeds-section {
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  flex: 1;
+  overflow: hidden;
+}
+
+.feeds-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  background: none;
+  color: var(--text);
+  font-weight: 500;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.feeds-header:hover {
+  background-color: var(--hover);
+}
+
+.feed-count {
+  margin-left: auto;
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.feeds {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  overflow-y: auto;
+  transition: max-height 0.3s ease;
+}
+
+.feeds.collapsed {
+  max-height: 0;
+  overflow: hidden;
+}
+
+.feed-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: none;
+  color: var(--text);
+  border-radius: 6px;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.feed-item:hover {
+  background-color: var(--hover);
+}
+
+.feed-item.active {
+  background-color: var(--secondary);
+  font-weight: 500;
+}
+
+/* Article Card Updates */
+.article-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.read-later-btn {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+}
+
+.read-later-btn:hover {
+  opacity: 1;
+}
+
+.read-later-btn.active {
+  background: var(--primary);
+  color: var(--background);
+  opacity: 1;
+}
+
+.feed-divider {
+  height: 1px;
+  background-color: var(--secondary);
+  margin: 0.5rem 0;
+}
+
+/* Button with icon styles */
+.feed-item,
+.filter-btn,
+.add-feed button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Set consistent icon colors */
+.feed-icon {
+  color: var(--text) !important;
+}
+
+/* Remove or override any active state changes */
+.feed-item.active .feed-icon {
+  color: var(--text) !important;  /* Keep theme color even when active */
+}
+
+/* Force correct icon color */
+#all-feeds-icon {
+  color: var(--text) !important;
+}
+
+.feed-item.active #all-feeds-icon {
+  color: var(--text) !important;  /* Keep theme color even when active */
+}
+
+.article-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.article-description {
+  margin: 0.75rem 0;
+  color: var(--text);
+  opacity: 0.8;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.article-info {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  margin-top: auto;
+  color: var(--text-secondary);
+}
+
+.article-source {
+  font-weight: 500;
+}
+
+.article-card.read .article-info {
+  opacity: 0.7;
+}
+
+.article-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.article-card h2 {
+  margin-bottom: 0.5rem;
+}
+
+.save-btn {
+  padding: 0.5rem;
+  background: none;
+  opacity: 0.7;
+  transition: opacity 0.2s ease;
+  color: var(--text);
+}
+
+.save-btn:hover {
+  opacity: 1;
+  background: var(--secondary);
+}
+
+.save-btn.active {
+  opacity: 1;
+  color: var(--text);
+}
+
+.save-btn.active:hover {
+  background: var(--hover);
+}
+
+.article-card.read {
+  opacity: 0.7;
+}
+
+.article-card.read h2 {
+  color: var(--text);
+  opacity: 0.7;
+}
+
+.article-image {
+  flex-shrink: 0;
+  width: 120px;
+  height: 80px;
+  border-radius: 6px;
+  overflow: hidden;
+  background-color: var(--secondary);
+}
+
+.article-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Handle missing images gracefully */
+.article-card:not(:has(.article-image)) .article-meta {
+  padding-left: 0;
+}
+
+.search-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--secondary);
+  border-radius: 6px;
+}
+
+.feed-item-container {
+  display: flex;
+  align-items: center;
+  padding-right: 0.5rem;
+}
+
+.feed-item-container .feed-item {
+  flex: 1;
+}
+
+.delete-feed-btn {
+  padding: 0.5rem;
+  color: var(--text);
+  opacity: 0.4;
+  transition: opacity 0.2s ease;
+  background: none;
+}
+
+.feed-item-container:hover .delete-feed-btn {
+  opacity: 0.7;
+}
+
+.delete-feed-btn:hover {
+  opacity: 1 !important;
+  background-color: var(--hover);
+  border-radius: 6px;
+}
+
+.feed-item-container .feed-item.active + .delete-feed-btn {
+  color: var(--background);
+}
+
+.settings-container {
+  position: relative;
+}
+
+.settings-button {
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+}
+
+.settings-button:hover {
+  background-color: var(--secondary);
+}
+
+.settings-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 0.5rem;
+  background-color: var(--background);
+  border: 1px solid var(--secondary);
+  border-radius: 8px;
+  padding: 1rem;
+  min-width: 200px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.settings-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.settings-divider {
+  height: 1px;
+  background-color: var(--secondary);
+  margin: 1rem 0;
+}
+
+.retention-select {
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--secondary);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--text);
+  font-size: 0.75rem;
+  min-width: 80px;
+}
+
+.cleanup-button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.cleanup-button:hover {
+  background: var(--hover);
+}
+
+.donate-button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  text-align: center;
+  background-color: var(--secondary);
+  color: var(--text);
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.donate-button:hover {
+  background-color: var(--hover);
+}
+
+.article-author {
+  opacity: 0.8;
+}
+
+.article-card.read .article-author {
+  opacity: 0.6;
+}
+
+
+.nav-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  position: relative;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  color: var(--text);
+  padding: 0.5rem;
+  cursor: pointer;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.icon-button:hover {
+  background-color: var(--secondary);
+}
+
+.settings-group span {
+  color: var(--text);
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(4px);
+}
+
+.modal-content {
+    background-color: var(--background);
+    padding: 2rem;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+    border: 1px solid var(--secondary);
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    color: var(--text);
+    font-size: 1.5rem;
+}
+
+.feed-input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1.5rem;
+    border: 1px solid var(--secondary);
+    border-radius: 6px;
+    background-color: var(--background);
+    color: var(--text);
+    font-size: 1rem;
+    transition: border-color 0.2s ease;
+}
+
+.feed-input:focus {
+    outline: none;
+    border-color: var(--text);
+}
+
+.feed-input::placeholder {
+    color: var(--text-secondary);
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+
+.cancel-button,
+.submit-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    transition: background-color 0.2s ease;
+}
+
+.cancel-button {
+    background-color: var(--secondary);
+    color: var(--text);
+}
+
+.submit-button {
+    background-color: var(--primary);
+    color: var(--text);
+    font-weight: 500;
+}
+
+.submit-button:hover {
+    background-color: var(--hover);
+}
+
+.cancel-button:hover {
+    background-color: var(--hover);
+}
+
+/* Add focus styles for accessibility */
+.cancel-button:focus,
+.submit-button:focus,
+.feed-input:focus {
+    outline: 2px solid var(--text);
+    outline-offset: 2px;
+}
+
+.article-viewer {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--background);
+}
+
+.article-viewer-header {
+    padding: 1rem 2rem;
+    border-bottom: 1px solid var(--secondary);
+}
+
+.article-viewer-header h1 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.5rem;
+    color: var(--text);
+}
+
+.article-source {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+.article-frame {
+    flex: 1;
+    width: 100%;
+    border: none;
+    background-color: white;
+}
+
+/* Update existing nav-controls styles */
+.nav-controls {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.icon-button {
+    background: none;
+    border: none;
+    color: var(--text);
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s ease;
+}
+
+.icon-button:hover {
+    background-color: var(--secondary);
+}
+
+/* Placeholder for missing images */
+.article-image-placeholder {
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(45deg, var(--secondary), var(--hover));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-secondary);
+}

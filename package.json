@@ -1,0 +1,106 @@
+{
+  "name": "clearfeed",
+  "version": "1.0.0",
+  "description": "A clean and simple RSS feed reader",
+  "author": "ClearFeed Team",
+  "main": "Main.js",
+  "scripts": {
+    "start": "electron .",
+    "dev": "cross-env NODE_ENV=development concurrently \"cd frontend && npm start\" \"wait-on http://localhost:3000 && electron .\"",
+    "build": "cd frontend && npm run build && cd .. && electron-builder",
+    "build:all": "cd frontend && npm run build && cd .. && electron-builder --mac --win --linux",
+    "build:mac": "cd frontend && npm run build && cd .. && electron-builder --mac",
+    "build:win": "cd frontend && npm run build && cd .. && electron-builder --win",
+    "build:linux": "cd frontend && npm run build && cd .. && electron-builder --linux",
+    "dist": "npm run build:all",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "build": {
+    "appId": "com.clearfeed.app",
+    "productName": "ClearFeed",
+    "copyright": "Copyright © 2025 ClearFeed Team",
+    "files": [
+      "Main.js",
+      "preload.js",
+      "ipc.js",
+      "database.js",
+      "frontend/build/**/*",
+      "node_modules/**/*",
+      "assets/**/*"
+    ],
+    "nodeGypRebuild": false,
+    "buildDependenciesFromSource": false,
+    "directories": {
+      "buildResources": "assets",
+      "output": "dist"
+    },
+    "mac": {
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.news",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "win": {
+      "icon": "assets/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64", "ia32", "arm64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64", "ia32", "arm64"]
+        }
+      ]
+    },
+    "linux": {
+      "icon": "assets/icon.png",
+      "category": "News",
+      "target": [
+        {
+          "target": "AppImage",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "rpm",
+          "arch": ["x64", "arm64"]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true
+    }
+  },
+  "dependencies": {
+    "better-sqlite3": "^8.7.0",
+    "cors": "^2.8.5",
+    "electron-is-dev": "^2.0.0",
+    "electron-store": "^8.1.0",
+    "express": "^4.18.2",
+    "rss-parser": "^3.13.0"
+  },
+  "devDependencies": {
+    "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
+    "concurrently": "^7.6.0",
+    "cross-env": "^7.0.3",
+    "electron": "^25.0.0",
+    "electron-builder": "^24.4.0",
+    "electron-rebuild": "^3.2.9",
+    "wait-on": "^7.0.1"
+  }
+}
