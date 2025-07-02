@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, session } = require('electron');
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 const { setupIPC } = require('./ipc');
@@ -46,7 +46,15 @@ function createWindow() {
             sandbox: false,
             devTools: true,
             worldSafeExecuteJavaScript: true,
-            webSecurity: false  // Allow loading external content in iframes
+            webSecurity: false,  // Allow loading external content in iframes
+            allowRunningInsecureContent: true,  // Allow mixed content
+            experimentalFeatures: true,  // Enable experimental web features
+            additionalArguments: [
+                '--disable-web-security',
+                '--disable-features=VizDisplayCompositor',
+                '--disable-site-isolation-trials',
+                '--disable-features=BlockInsecurePrivateNetworkRequests'
+            ]
         }
     });
 
@@ -113,7 +121,37 @@ function createWindow() {
 }
 
 app.whenReady().then(() => {
-    console.log('App is ready, creating window...');
+    console.log('App is ready, setting up CSP bypass...');
+    
+    // Intercept and modify headers to bypass CSP
+    session.defaultSession.webRequest.onHeadersReceived((details, callback) => {
+        const responseHeaders = details.responseHeaders || {};
+        
+        // Remove all CSP-related headers
+        delete responseHeaders['content-security-policy'];
+        delete responseHeaders['Content-Security-Policy'];
+        delete responseHeaders['x-frame-options'];
+        delete responseHeaders['X-Frame-Options'];
+        delete responseHeaders['x-content-type-options'];
+        delete responseHeaders['X-Content-Type-Options'];
+        
+        callback({ responseHeaders });
+    });
+    
+    // Also handle before-send-headers to modify request headers
+    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+        const requestHeaders = details.requestHeaders || {};
+        
+        // Add headers to bypass restrictions
+        requestHeaders['User-Agent'] = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+        requestHeaders['Sec-Fetch-Dest'] = 'document';
+        requestHeaders['Sec-Fetch-Mode'] = 'navigate';
+        requestHeaders['Sec-Fetch-Site'] = 'none';
+        
+        callback({ requestHeaders });
+    });
+    
+    console.log('CSP bypass configured, creating window...');
     createWindow();
 });
 
