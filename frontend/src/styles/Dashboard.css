@@ -58,23 +58,26 @@ body {
 }
 
 .dashboard {
-    min-height: 100vh;
+    height: 100vh;
     background-color: var(--background);
+    overflow: hidden;
   }
   
   .dashboard-wrapper {
     max-width: 1800px;
     margin: 0 auto;
-    min-height: 100vh;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
   }
 
 .navbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1rem 2rem;
+  padding: 0.5rem 2rem;
   border-bottom: 1px solid var(--secondary);
-  min-height: 64px;
+  min-height: 48px;
 }
 
 .navbar h1 {
@@ -86,16 +89,22 @@ body {
 .feed-container {
   display: grid;
   grid-template-columns: 300px 1fr;
-  height: calc(100vh - 64px);
+  flex: 1;
+  overflow: hidden;
 }
 
 .feed-list {
   border-right: 1px solid var(--secondary);
   height: 100%;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
 }
 
 .feed-content {
   padding: 2rem;
+  overflow-y: auto;
+  height: 100%;
 }
 
 .empty-state {

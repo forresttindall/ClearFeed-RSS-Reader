@@ -10,7 +10,9 @@ const validChannels = [
     'fetch-articles',
     'add-feed',
     'mark-as-read',
-    'delete-feed'
+    'delete-feed',
+    'update-feeds',
+    'cleanup-database'
 ];
 
 // Create the API object
