@@ -87,14 +87,7 @@
           ]
         },
         {
-          "target": "deb",
-          "arch": [
-            "x64",
-            "arm64"
-          ]
-        },
-        {
-          "target": "rpm",
+          "target": "tar.gz",
           "arch": [
             "x64",
             "arm64"
@@ -110,7 +103,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "^12.2.0",
     "cors": "^2.8.5",
     "electron-is-dev": "^2.0.0",
     "electron-store": "^8.1.0",
