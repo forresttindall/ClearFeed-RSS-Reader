@@ -50,7 +50,9 @@ Download the appropriate installer for your operating system from the [Releases]
 
 #### Linux
 - **ClearFeed-1.0.0.AppImage** - Universal Linux application (recommended)
-- **ClearFeed-1.0.0-linux.tar.gz** - Portable Linux version
+- **ClearFeed-1.0.0-arm64.AppImage** - ARM64 Linux application
+- **ClearFeed-1.0.0.tar.gz** - Portable Linux version (x64)
+- **ClearFeed-1.0.0-arm64.tar.gz** - Portable Linux version (ARM64)
 
 ### Installation Instructions
 
@@ -72,19 +74,18 @@ Download the appropriate installer for your operating system from the [Releases]
 #### Linux
 
 **AppImage (Recommended)**
-1. Download **ClearFeed-1.0.0.AppImage**
-2. Make it executable: `chmod +x ClearFeed-1.0.0.AppImage`
-3. Run the application: `./ClearFeed-1.0.0.AppImage`
+1. Download the appropriate AppImage for your architecture:
+   - x64: **ClearFeed-1.0.0.AppImage**
+   - ARM64: **ClearFeed-1.0.0-arm64.AppImage**
+2. Make it executable: `chmod +x ClearFeed-1.0.0*.AppImage`
+3. Run the application: `./ClearFeed-1.0.0*.AppImage`
 
-**Debian/Ubuntu (.deb)**
-1. Download **ClearFeed-1.0.0.deb**
-2. Install: `sudo dpkg -i ClearFeed-1.0.0.deb`
-3. Launch from applications menu or run: `clearfeed`
-
-**Red Hat/Fedora (.rpm)**
-1. Download **ClearFeed-1.0.0.rpm**
-2. Install: `sudo rpm -i ClearFeed-1.0.0.rpm`
-3. Launch from applications menu or run: `clearfeed`
+**Portable Version**
+1. Download the appropriate tar.gz for your architecture:
+   - x64: **ClearFeed-1.0.0.tar.gz**
+   - ARM64: **ClearFeed-1.0.0-arm64.tar.gz**
+2. Extract: `tar -xzf ClearFeed-1.0.0*.tar.gz`
+3. Run the application from the extracted directory
 
 ## Getting Started
 

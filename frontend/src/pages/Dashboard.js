@@ -52,6 +52,7 @@ function Dashboard() {
   const [retentionDays, setRetentionDays] = useState(() => 
     parseInt(localStorage.getItem('retentionDays')) || 30
   );
+  const [savedScrollPosition, setSavedScrollPosition] = useState(0);
 
   // Fetch feeds on component mount
   useEffect(() => {
@@ -346,8 +347,26 @@ function Dashboard() {
   };
 
   const handleArticleClick = async (article) => {
+    // Save current scroll position before navigating to article
+    const feedContentElement = document.querySelector('.feed-content');
+    if (feedContentElement) {
+      setSavedScrollPosition(feedContentElement.scrollTop);
+    }
+    
     await markAsRead(article.id);
     setSelectedArticle(article);
+  };
+
+  const handleBackToFeed = () => {
+    setSelectedArticle(null);
+    
+    // Restore scroll position after the component re-renders
+    setTimeout(() => {
+      const feedContentElement = document.querySelector('.feed-content');
+      if (feedContentElement) {
+        feedContentElement.scrollTop = savedScrollPosition;
+      }
+    }, 0);
   };
 
   const handleDatabaseCleanup = async () => {
@@ -384,7 +403,7 @@ function Dashboard() {
             {selectedArticle ? (
                 <button 
                     className="icon-button"
-                    onClick={() => setSelectedArticle(null)}
+                    onClick={handleBackToFeed}
                     title="Back to feeds"
                 >
                     <ArrowLeft size={24} />
@@ -576,7 +595,7 @@ function Dashboard() {
                         onError={() => {
                             console.log('Iframe failed to load, opening in external browser');
                             window.electron?.shell?.openExternal(selectedArticle.link);
-                            setSelectedArticle(null);
+                            handleBackToFeed();
                         }}
                         onLoad={(e) => {
                             console.log('Iframe loaded successfully for:', selectedArticle.link);
