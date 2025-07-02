@@ -311,12 +311,37 @@ function Dashboard() {
     });
   };
 
+
   const handleRefresh = async () => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+        console.error('IPC not available');
+        return;
+    }
+    
     try {
-      await fetchFeeds();
-      await fetchArticles();
+      console.log('Updating feeds...');
+      const result = await electronInstance.ipcRenderer.invoke('update-feeds');
+      
+      if (result.success) {
+        console.log('Feed update result:', result.message);
+        // Refresh the UI with updated data
+        await fetchFeeds();
+        await fetchArticles();
+        
+        // Show success message if there were new articles
+        if (result.newArticles > 0) {
+          alert(`Successfully updated! Found ${result.newArticles} new articles from ${result.updatedFeeds} feeds.`);
+        } else {
+          alert('Feeds updated - no new articles found.');
+        }
+      } else {
+        console.error('Feed update failed:', result.error);
+        alert('Error updating feeds: ' + result.error);
+      }
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.error('Error refreshing feeds:', error);
+      alert('Error updating feeds: ' + error.message);
     }
   };
 

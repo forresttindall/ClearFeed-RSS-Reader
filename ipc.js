@@ -392,6 +392,116 @@ function setupIPC() {
         }
     });
 
+    // Handle updating all feeds
+    ipcMain.handle('update-feeds', async () => {
+        try {
+            console.log('Starting feed update process...');
+            
+            // Get all feeds from database
+            const feedsStmt = db.prepare('SELECT * FROM feeds');
+            const feeds = feedsStmt.all();
+            
+            if (feeds.length === 0) {
+                return {
+                    success: true,
+                    message: 'No feeds to update',
+                    updatedFeeds: 0,
+                    newArticles: 0
+                };
+            }
+            
+            let updatedFeeds = 0;
+            let totalNewArticles = 0;
+            
+            // Prepare the article insert statement
+            const insertArticleStmt = db.prepare(`
+                INSERT OR REPLACE INTO articles (
+                    title, link, publishedAt, feedId, imageUrl, author, description
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            `);
+            
+            // Update each feed
+            for (const feed of feeds) {
+                try {
+                    console.log(`Updating feed: ${feed.url}`);
+                    const feedData = await parser.parseURL(feed.url);
+                    
+                    let newArticlesCount = 0;
+                    
+                    // Process each article
+                    for (const item of feedData.items) {
+                        const imageUrl = extractImageUrl(item, feedData);
+                        
+                        // Get author and description
+                        let author = item.author || 
+                                    item.creator || 
+                                    item['dc:creator'] || 
+                                    null;
+                                    
+                        let description = item.description || 
+                                         item.summary || 
+                                         item.content || 
+                                         null;
+                                         
+                        if (description) {
+                            // Clean up HTML entities and special characters
+                            description = description
+                                .replace(/<[^>]*>/g, ' ')
+                                .replace(/&\w+;/g, '')
+                                .replace(/&#\d+;/g, '')
+                                .replace(/\s+/g, ' ')
+                                .replace(/[^\w\s.,!?-]/g, '')
+                                .trim();
+                            
+                            description = description.substring(0, 200) + (description.length > 200 ? '...' : '');
+                        }
+                        
+                        try {
+                            const result = insertArticleStmt.run(
+                                item.title,
+                                item.link,
+                                new Date(item.pubDate).toISOString(),
+                                feed.id,
+                                imageUrl,
+                                author,
+                                description
+                            );
+                            
+                            if (result.changes > 0) {
+                                newArticlesCount++;
+                            }
+                        } catch (err) {
+                            console.error('Error inserting article:', err);
+                        }
+                    }
+                    
+                    console.log(`Feed ${feed.url} updated with ${newArticlesCount} new articles`);
+                    updatedFeeds++;
+                    totalNewArticles += newArticlesCount;
+                    
+                } catch (err) {
+                    console.error(`Error updating feed ${feed.url}:`, err);
+                }
+            }
+            
+            console.log(`Feed update complete. Updated ${updatedFeeds} feeds with ${totalNewArticles} new articles`);
+            
+            return {
+                success: true,
+                updatedFeeds,
+                newArticles: totalNewArticles,
+                message: `Updated ${updatedFeeds} feeds with ${totalNewArticles} new articles`
+            };
+            
+        } catch (err) {
+            console.error('Error updating feeds:', err);
+            return {
+                success: false,
+                error: err.message
+            };
+        }
+    });
+
     // Handle database cleanup
     ipcMain.handle('cleanup-database', async (event, { retentionDays }) => {
         try {
