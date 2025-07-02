@@ -1,113 +1,180 @@
 # ClearFeed Distribution Guide
 
-This guide explains how to build and distribute ClearFeed for multiple platforms (Windows, macOS, and Linux).
+This guide is for developers to build and distribute ClearFeed desktop application packages across Windows, macOS, and Linux platforms.
 
-## Prerequisites
+## Developer Prerequisites
 
-1. **Node.js** (v16 or higher)
-2. **npm** or **yarn**
-3. **Platform-specific requirements:**
-   - **macOS**: Xcode Command Line Tools
-   - **Windows**: Windows SDK (for building Windows apps on Windows)
-   - **Linux**: Standard build tools (gcc, make, etc.)
+### System Requirements
+- **Node.js**: Version 16 or higher
+- **npm**: Version 8 or higher
+- **Git**: For version control
 
-## Installation
+### Platform-Specific Requirements
 
-1. Clone the repository and install dependencies:
-```bash
-cd ClearFeed
-npm install
-cd frontend
-npm install
-cd ..
-```
+#### macOS (for building macOS packages)
+- **Xcode Command Line Tools**: Required for native module compilation
+- **macOS 10.13** or higher for building
+- **Apple Developer Account**: Required for code signing and notarization
 
-## Building for Distribution
+#### Windows (for building Windows packages)
+- **Visual Studio Build Tools**: Required for native module compilation
+- **Windows 10** or higher recommended
+- **Code Signing Certificate**: Recommended for production releases
 
-### Build for All Platforms
+#### Linux (for building Linux packages)
+- **Build essentials**: `sudo apt-get install build-essential`
+- **Additional dependencies**: `sudo apt-get install libnss3-dev libatk-bridge2.0-dev libdrm2 libxcomposite1 libxdamage1 libxrandr2 libgbm1 libxss1 libasound2-dev`
+
+## Development Setup
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/yourusername/clearfeed.git
+   cd clearfeed
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Install frontend dependencies**:
+   ```bash
+   cd frontend
+   npm install
+   cd ..
+   ```
+
+## Building Distribution Packages
+
+### Manual Building for Distribution
+
+#### Build All Platforms
 ```bash
 npm run build:all
 ```
-This creates distributables for macOS, Windows, and Linux.
 
-### Build for Specific Platforms
+#### Platform-Specific Builds
 
-#### macOS Only
+**macOS** (DMG and ZIP packages):
 ```bash
 npm run build:mac
 ```
-Creates:
-- `.dmg` installer for macOS
-- `.zip` archive for macOS
-- Supports both Intel (x64) and Apple Silicon (arm64)
 
-#### Windows Only
+**Windows** (EXE installer and portable ZIP):
 ```bash
 npm run build:win
 ```
-Creates:
-- `.exe` NSIS installer for Windows
-- Portable `.exe` (no installation required)
-- Supports x64, x86 (ia32), and ARM64 architectures
 
-#### Linux Only
+**Linux** (AppImage, DEB, RPM, TAR.GZ):
 ```bash
 npm run build:linux
 ```
-Creates:
-- `.AppImage` (universal Linux package)
-- `.deb` package (Debian/Ubuntu)
-- `.rpm` package (Red Hat/Fedora/SUSE)
-- Supports x64 and ARM64 architectures
 
-## Output Files
+### Distribution File Output
 
-All built files will be located in the `dist/` directory:
+All distribution files are generated in the `dist/` directory with consistent naming:
 
-```
-dist/
-├── ClearFeed-1.0.0.dmg                    # macOS DMG installer
-├── ClearFeed-1.0.0-mac.zip                # macOS ZIP archive
-├── ClearFeed-1.0.0-arm64.dmg              # macOS ARM64 DMG
-├── ClearFeed-1.0.0-arm64-mac.zip          # macOS ARM64 ZIP
-├── ClearFeed Setup 1.0.0.exe              # Windows installer
-├── ClearFeed 1.0.0.exe                    # Windows portable
-├── ClearFeed-1.0.0-win32-x64.exe          # Windows x64 portable
-├── ClearFeed-1.0.0-win32-arm64.exe        # Windows ARM64 portable
-├── ClearFeed-1.0.0.AppImage               # Linux AppImage
-├── clearfeed_1.0.0_amd64.deb              # Linux DEB package
-├── clearfeed-1.0.0.x86_64.rpm             # Linux RPM package
-└── ...
-```
+**Generated Files**:
+- **macOS**: `ClearFeed-{version}-mac-x64.dmg`, `ClearFeed-{version}-mac-arm64.dmg`, `ClearFeed-{version}-mac-x64.zip`, `ClearFeed-{version}-mac-arm64.zip`
+- **Windows**: `ClearFeed-{version}-win-x64.exe`, `ClearFeed-{version}-win-ia32.exe`, `ClearFeed-{version}-win-x64.zip`, `ClearFeed-{version}-win-ia32.zip`
+- **Linux**: `ClearFeed-{version}-linux-x64.AppImage`, `ClearFeed-{version}-linux-x64.deb`, `ClearFeed-{version}-linux-x64.rpm`, `ClearFeed-{version}-linux-x64.tar.gz`
 
-## Distribution Strategies
+### Automated GitHub Releases (Recommended)
 
-### 1. Direct Download
-- Upload files to your website
-- Provide download links for each platform
-- Include checksums for security verification
+The project includes a GitHub Actions workflow that automatically builds and releases the application when you push a version tag.
 
-### 2. GitHub Releases
-- Create a new release on GitHub
-- Upload all distribution files as release assets
-- Users can download directly from GitHub
+#### Creating an Automated Release
 
-### 3. App Stores
+1. **Update version in package.json**:
+   ```bash
+   npm version patch  # or minor, major
+   ```
 
-#### macOS App Store
-- Requires Apple Developer account ($99/year)
-- Need to configure code signing in package.json
-- Submit through App Store Connect
+2. **Push the tag**:
+   ```bash
+   git push origin main --tags
+   ```
 
-#### Microsoft Store
-- Requires Microsoft Developer account
-- Can distribute MSIX packages
-- Submit through Partner Center
+3. **GitHub Actions will automatically**:
+   - Build for all platforms (macOS, Windows, Linux)
+   - Create distribution files
+   - Create a new GitHub Release
+   - Upload all distribution files as release assets
 
-#### Linux Package Repositories
-- Submit to Flathub (Flatpak)
-- Submit to Snap Store (Snapcraft)
-- Submit to AUR (Arch User Repository)
+#### Automated Release Workflow
+
+The workflow (`.github/workflows/release.yml`) performs the following:
+
+1. **Triggers**: On push of tags matching `v*` (e.g., `v1.0.0`)
+2. **Builds**: Parallel builds for macOS, Windows, and Linux
+3. **Artifacts**: Creates platform-specific distribution files
+4. **Release**: Automatically creates GitHub Release with all files
+
+
+
+## Distribution Workflow
+
+### Manual Distribution Process
+
+1. **Build the application**:
+   ```bash
+   npm run build:all
+   ```
+
+2. **Locate distribution files** in the `dist/` directory
+
+3. **Upload to distribution platform**:
+   - **GitHub Releases**: Upload files as release assets
+   - **Direct hosting**: Upload to your web server
+   - **App stores**: Follow platform-specific submission processes
+
+### Code Signing (Production)
+
+#### macOS
+- **Developer ID**: Required for distribution outside Mac App Store
+- **Notarization**: Required for macOS 10.15+
+- Configure in `package.json` under `build.mac`
+
+#### Windows
+- **Code signing certificate**: Recommended for user trust
+- Configure in `package.json` under `build.win`
+
+#### Linux
+- **GPG signing**: For package repositories
+- Generally optional for direct distribution
+
+## Testing Distribution Files
+
+### Pre-Release Testing
+
+1. **Install on clean systems**:
+   - Test each platform's installer
+   - Verify application launches correctly
+   - Check all features work as expected
+
+2. **File integrity checks**:
+   - Verify file sizes are reasonable
+   - Ensure no missing dependencies
+   - Test uninstallation process
+
+3. **Security scanning**:
+   - Run antivirus scans on Windows executables
+   - Verify code signatures are valid
+
+### Distribution Platforms
+
+#### GitHub Releases (Recommended)
+- Free hosting for open-source projects
+- Automatic download statistics
+- Version management
+- User-friendly download interface
+
+#### Direct Distribution
+- Host files on your own server
+- Full control over distribution
+- Custom download pages
+- Requires hosting infrastructure
 
 ## Code Signing (Recommended for Production)
 
@@ -132,36 +199,31 @@ Add to package.json build configuration:
 }
 ```
 
-## Auto-Updates (Optional)
+## Release Checklist
 
-To enable automatic updates, you can integrate with services like:
-- **electron-updater** with GitHub Releases
-- **Hazel** for simple update server
-- **Nuts** for more advanced update management
+### Before Building
+- [ ] Update version in `package.json`
+- [ ] Update `CHANGELOG.md` or release notes
+- [ ] Run tests and ensure all pass
+- [ ] Verify all dependencies are up to date
 
-## Monetization Options
+### Building
+- [ ] Clean previous builds (`rm -rf dist node_modules`)
+- [ ] Fresh install dependencies (`npm install`)
+- [ ] Build for all platforms (`npm run build:all`)
+- [ ] Verify all expected files are generated
 
-### 1. License Key System
-- Implement license validation in the app
-- Use services like Gumroad, Paddle, or Stripe for payments
-- Distribute license keys to paying customers
+### Testing
+- [ ] Test installation on clean systems
+- [ ] Verify application launches and functions correctly
+- [ ] Check file sizes are reasonable
+- [ ] Validate code signatures (if applicable)
 
-### 2. Subscription Model
-- Integrate with payment processors
-- Implement user authentication
-- Restrict features based on subscription status
-
-### 3. One-time Purchase
-- Sell through app stores (they handle payments)
-- Use payment processors for direct sales
-- Provide download links after purchase
-
-## Testing Distribution
-
-1. **Test on target platforms**: Always test your built applications on the actual target operating systems
-2. **Virtual machines**: Use VMs to test on different OS versions
-3. **Beta testing**: Distribute to a small group before public release
-4. **Automated testing**: Set up CI/CD pipelines for automated building and testing
+### Distribution
+- [ ] Upload to GitHub Releases or hosting platform
+- [ ] Update download links and documentation
+- [ ] Announce release to users
+- [ ] Monitor for issues and user feedback
 
 ## Troubleshooting
 
