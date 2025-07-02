@@ -50,8 +50,6 @@ Download the appropriate installer for your operating system from the [Releases]
 
 #### Linux
 - **ClearFeed-1.0.0.AppImage** - Universal Linux application (recommended)
-- **ClearFeed-1.0.0.deb** - Debian/Ubuntu package
-- **ClearFeed-1.0.0.rpm** - Red Hat/Fedora package
 - **ClearFeed-1.0.0-linux.tar.gz** - Portable Linux version
 
 ### Installation Instructions
