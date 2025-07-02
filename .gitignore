@@ -11,6 +11,24 @@ build/
 dist/
 out/
 
+# Electron distribution files
+dist/**/*.dmg
+dist/**/*.zip
+dist/**/*.exe
+dist/**/*.deb
+dist/**/*.rpm
+dist/**/*.AppImage
+dist/**/ClearFeed.app/
+dist/**/mac/
+dist/**/mac-arm64/
+dist/**/win-unpacked/
+dist/**/linux-unpacked/
+
+# Large Electron Framework files
+**/Electron Framework
+**/app.asar
+*.asar
+
 # Environment variables
 .env
 .env.local
