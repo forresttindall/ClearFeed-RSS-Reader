@@ -170,10 +170,11 @@ If you find ClearFeed useful, consider supporting its development:
 - Share with others
 - Report bugs and suggest features
 - Contribute to the codebase
+- Buy me a coffee https://buymeacoffee.com/forresttindall
 
 ## Contact
 
-Forrest Tindall - Forrest@Forresttindall.com
+Forrest Tindall - Forrest.tindall@gmail.com
 
 Project Link: [https://github.com/forresttindall/ClearFeed-RSS-Reader](https://github.com/forresttindall/ClearFeed-RSS-Reader)
 
