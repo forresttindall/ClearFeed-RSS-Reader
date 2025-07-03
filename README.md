@@ -2,6 +2,8 @@
 
 A free and open-source minimalist RSS feed reader desktop application for Linux, macOS, and Windows. Completely private with no algorithms, no ads, no tracking, and fully offline capable.
 
+## Update: Sorry it was not ready, Beta v0.1.0 Coming soon!
+
 ## Screenshots
 
 ### Dark Mode
