@@ -248,7 +248,7 @@ function setupIPC() {
 
             // Prepare the article insert statement
             const insertArticleStmt = db.prepare(`
-                INSERT OR REPLACE INTO articles (
+                INSERT OR IGNORE INTO articles (
                     title, link, publishedAt, feedId, imageUrl, author, description
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
@@ -415,7 +415,7 @@ function setupIPC() {
             
             // Prepare the article insert statement
             const insertArticleStmt = db.prepare(`
-                INSERT OR REPLACE INTO articles (
+                INSERT OR IGNORE INTO articles (
                     title, link, publishedAt, feedId, imageUrl, author, description
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
@@ -533,6 +533,8 @@ function setupIPC() {
             };
         }
     });
+
+
 }
 
 module.exports = { setupIPC };

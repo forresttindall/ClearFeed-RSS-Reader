@@ -13,12 +13,19 @@
     "build:win": "cd frontend && npm run build && cd .. && electron-builder --win",
     "build:linux": "cd frontend && npm run build && cd .. && electron-builder --linux",
     "dist": "npm run build:all",
+    "pack": "cd frontend && npm run build && cd .. && electron-builder --dir",
+    "publish": "cd frontend && npm run build && cd .. && electron-builder --publish=always",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "build": {
-    "appId": "com.clearfeed.app",
+    "appId": "com.clearfeed.rssreader",
     "productName": "ClearFeed",
     "copyright": "Copyright © 2025 ClearFeed Team",
+    "publish": {
+      "provider": "github",
+      "owner": "forresttindall",
+      "repo": "ClearFeed-RSS-Reader"
+    },
     "files": [
       "Main.js",
       "preload.js",
@@ -118,6 +125,7 @@
     "electron": "^37.1.0",
     "electron-builder": "^24.4.0",
     "electron-rebuild": "^3.2.9",
+    "electron-updater": "^6.1.7",
     "wait-on": "^7.0.1"
   }
 }

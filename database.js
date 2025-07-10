@@ -48,7 +48,10 @@ try {
     const createFeedsTable = `
         CREATE TABLE IF NOT EXISTS feeds (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            url TEXT UNIQUE
+            title TEXT NOT NULL,
+            url TEXT UNIQUE NOT NULL,
+            description TEXT,
+            lastFetched TEXT
         )
     `;
     
@@ -67,16 +70,27 @@ try {
             author TEXT,
             description TEXT,
             read INTEGER DEFAULT 0,
-            FOREIGN KEY (feedId) REFERENCES feeds (id)
+            FOREIGN KEY (feedId) REFERENCES feeds (id),
+            UNIQUE(link, feedId)
         )
     `;
     
     db.exec(createArticlesTable);
     console.log('Articles table created successfully');
+    
+    // Create index for better performance on duplicate checking
+    const createIndexQuery = `
+        CREATE INDEX IF NOT EXISTS idx_articles_link_feed 
+        ON articles(link, feedId)
+    `;
+    
+    db.exec(createIndexQuery);
+    console.log('Articles index created successfully');
 
     // Verify tables were created
     const tables = db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all();
     console.log('Database tables:', tables);
+
     console.log('Database initialization completed successfully');
 } catch (err) {
     console.error('Error initializing database schema:', err);

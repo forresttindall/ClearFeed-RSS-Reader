@@ -50,7 +50,7 @@ body {
 }
 
 .mono .article-card h2 {
-  font-size: calc(1.1rem * var(--mono-adjust));
+  font-size: calc(1.4rem * var(--mono-adjust));
 }
 
 .mono .feed-item {
@@ -218,9 +218,10 @@ body {
 }
 
 .article-card h2 {
-  font-size: 1.1rem;
+  font-size: 1.4rem;
   line-height: 1.4;
   margin-bottom: 0.5rem;
+  font-weight: 600;
 }
 
 .article-card h2 a {
@@ -824,6 +825,99 @@ button:hover {
     backdrop-filter: blur(4px);
 }
 
+
+
+/* Database Settings Styles */
+.settings-section {
+  margin: 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.settings-section label {
+  font-weight: 500;
+  color: #333;
+}
+
+.settings-section input[type="number"] {
+  width: 80px;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 14px;
+}
+
+.cleanup-button {
+  background-color: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.cleanup-button:hover {
+  background-color: #c82333;
+}
+
+.settings-btn {
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background-color 0.3s ease;
+}
+
+.settings-btn:hover {
+  background-color: #5a6268;
+}
+
+
+
+.feed-item-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.feed-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.feed-title {
+  display: block;
+  font-weight: 500;
+  margin-bottom: 0.25rem;
+}
+
+.feed-actions {
+  display: flex;
+  gap: 0.25rem;
+  align-items: center;
+}
+
+.delete-feed-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem;
+  border-radius: 4px;
+  color: #dc3545;
+  transition: background-color 0.2s ease;
+}
+
+.delete-feed-btn:hover {
+  background-color: var(--hover);
+}
+
 .modal-content {
     background-color: var(--background);
     padding: 2rem;
@@ -897,10 +991,14 @@ button:hover {
     background-color: var(--hover);
 }
 
+
+
 /* Add focus styles for accessibility */
 .cancel-button:focus,
 .submit-button:focus,
-.feed-input:focus {
+.feed-input:focus,
+.color-picker:focus,
+.preset-color-btn:focus {
     outline: 2px solid var(--text);
     outline-offset: 2px;
 }

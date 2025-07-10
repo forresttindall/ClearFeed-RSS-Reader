@@ -52,7 +52,11 @@ function Dashboard() {
   const [retentionDays, setRetentionDays] = useState(() => 
     parseInt(localStorage.getItem('retentionDays')) || 30
   );
+
   const [savedScrollPosition, setSavedScrollPosition] = useState(0);
+  const [showDatabaseSettings, setShowDatabaseSettings] = useState(false);
+
+
 
   // Fetch feeds on component mount
   useEffect(() => {
@@ -127,6 +131,8 @@ function Dashboard() {
     }
   };
 
+
+
   const fetchArticles = async () => {
     const electronInstance = getElectron();
     if (!electronInstance?.ipcRenderer) {
@@ -144,6 +150,35 @@ function Dashboard() {
   const addFeed = async () => {
     console.log('Add feed clicked');
     setShowAddFeedModal(true);
+  };
+
+  const handleDatabaseCleanupFromSettings = async () => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+        console.error('IPC not available');
+        return;
+    }
+    
+    if (!window.confirm(`Are you sure you want to delete articles older than ${retentionDays} days? This action cannot be undone.`)) {
+        return;
+    }
+    
+    try {
+      const result = await electronInstance.ipcRenderer.invoke('cleanup-database', { retentionDays });
+      
+      if (result.success) {
+        console.log('Database cleanup result:', result);
+        // Refresh the UI with updated data
+        await fetchArticles();
+        
+        alert(`Successfully cleaned up! Deleted ${result.deletedCount} old articles.`);
+      } else {
+        alert('Error during cleanup: ' + result.error);
+      }
+    } catch (error) {
+      console.error('Error during database cleanup:', error);
+      alert('Error during cleanup: ' + error.message);
+    }
   };
 
   const handleAddFeedSubmit = async () => {
@@ -417,6 +452,8 @@ function Dashboard() {
                     <ArrowsClockwise size={24} />
                 </button>
             )}
+
+
             <button 
               className="icon-button"
               onClick={() => setShowSettings(!showSettings)}
@@ -424,6 +461,7 @@ function Dashboard() {
             >
               <Gear size={24} />
             </button>
+
             {showSettings && (
               <div className="settings-dropdown">
                 <div className="settings-group">
@@ -533,6 +571,8 @@ function Dashboard() {
                 </button>
               </div>
 
+
+
               <div className="feeds-section">
                 <button 
                   className="feeds-header"
@@ -558,18 +598,20 @@ function Dashboard() {
                         onClick={() => setSelectedFeed(feed.id)}
                       >
                         <List size={18} />
-                        <span>{simplifyUrl(feed.url)}</span>
+                        <span className="feed-title">{simplifyUrl(feed.url)}</span>
                       </button>
-                      <button 
-                        className="delete-feed-btn"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteFeed(feed.id);
-                        }}
-                        title="Delete feed"
-                      >
-                        <Trash size={16} />
-                      </button>
+                      <div className="feed-actions">
+                        <button 
+                          className="delete-feed-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteFeed(feed.id);
+                          }}
+                          title="Delete feed"
+                        >
+                          <Trash size={16} />
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -728,6 +770,36 @@ function Dashboard() {
           </div>
         </div>
       )}
+
+      {showDatabaseSettings && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h2>Database Settings</h2>
+            <div className="settings-section">
+              <label htmlFor="retention-days">Delete articles older than:</label>
+              <input
+                id="retention-days"
+                type="number"
+                min="1"
+                max="365"
+                value={retentionDays}
+                onChange={(e) => setRetentionDays(parseInt(e.target.value) || 30)}
+              />
+              <span>days</span>
+            </div>
+            <div className="modal-buttons">
+              <button onClick={handleDatabaseCleanupFromSettings} className="cleanup-button">
+                Clean Up Database
+              </button>
+              <button onClick={() => setShowDatabaseSettings(false)} className="cancel-button">
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+
     </div>
   );
 }
