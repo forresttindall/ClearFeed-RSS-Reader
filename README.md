@@ -1,18 +1,20 @@
 <div align="center">
-  <img src="assets/logo.png" alt="Creationbase Logo" width="200">
+  <img src="assets/logo.png" alt="Creationbase Logo" width="150">
   
   # ClearFeed RSS Reader
 
   <p><strong>Made by <a href="https://creationbase.io">Creationbase</a></strong></p>
-</div>
-
-
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases)
 [![Downloads](https://img.shields.io/github/downloads/forresttindall/ClearFeed-RSS-Reader/total)](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases)
 [![Stars](https://img.shields.io/github/stars/forresttindall/ClearFeed-RSS-Reader)](https://github.com/forresttindall/ClearFeed-RSS-Reader/stargazers)
 [![Forks](https://img.shields.io/github/forks/forresttindall/ClearFeed-RSS-Reader)](https://github.com/forresttindall/ClearFeed-RSS-Reader/network)
+
+</div>
+
+
+
 
 A free and open-source minimalist RSS feed reader desktop application for Linux, macOS, and Windows. Completely private with no algorithms, no ads, no tracking, and fully offline capable.
 
