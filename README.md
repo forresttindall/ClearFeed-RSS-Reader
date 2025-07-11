@@ -57,32 +57,32 @@ A free and open-source minimalist RSS feed reader desktop application for Linux,
 Download the appropriate installer for your operating system from the [Releases](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases) page:
 
 #### Windows
-- **ClearFeed-Setup-1.0.0.exe** - Windows installer (recommended)
-- **ClearFeed-1.0.0-win.zip** - Portable Windows version
+- **ClearFeed-Setup-0.1.0.exe** - Windows installer (recommended)
+- **ClearFeed-0.1.0-win.zip** - Portable Windows version
 
 #### macOS
-- **ClearFeed-1.0.0.dmg** - macOS disk image for Intel Macs
-- **ClearFeed-1.0.0-arm64.dmg** - macOS disk image for Apple Silicon Macs (M1/M2)
-- **ClearFeed-1.0.0-mac.zip** - Portable macOS version for Intel Macs
-- **ClearFeed-1.0.0-arm64-mac.zip** - Portable macOS version for Apple Silicon Macs
+- **ClearFeed-0.1.0.dmg** - macOS disk image for Intel Macs
+- **ClearFeed-0.1.0-arm64.dmg** - macOS disk image for Apple Silicon Macs (M1/M2)
+- **ClearFeed-0.1.0-mac.zip** - Portable macOS version for Intel Macs
+- **ClearFeed-0.1.0-arm64-mac.zip** - Portable macOS version for Apple Silicon Macs
 
 #### Linux
-- **ClearFeed-1.0.0.AppImage** - Universal Linux application (recommended)
-- **ClearFeed-1.0.0-arm64.AppImage** - ARM64 Linux application
-- **ClearFeed-1.0.0.tar.gz** - Portable Linux version (x64)
-- **ClearFeed-1.0.0-arm64.tar.gz** - Portable Linux version (ARM64)
+- **ClearFeed-0.1.0.AppImage** - Universal Linux application (recommended)
+- **ClearFeed-0.1.0-arm64.AppImage** - ARM64 Linux application
+- **ClearFeed-0.1.0.tar.gz** - Portable Linux version (x64)
+- **ClearFeed-0.1.0-arm64.tar.gz** - Portable Linux version (ARM64)
 
 ### Installation Instructions
 
 #### Windows
-1. Download **ClearFeed-Setup-1.0.0.exe**
+1. Download **ClearFeed-Setup-0.1.0.exe**
 2. Run the installer and follow the setup wizard
 3. Launch ClearFeed from the Start Menu or Desktop shortcut
 
 #### macOS
 1. Download the appropriate .dmg file for your Mac:
-   - Intel Macs: **ClearFeed-1.0.0.dmg**
-   - Apple Silicon Macs: **ClearFeed-1.0.0-arm64.dmg**
+   - Intel Macs: **ClearFeed-0.1.0.dmg**
+   - Apple Silicon Macs: **ClearFeed-0.1.0-arm64.dmg**
 2. Open the downloaded .dmg file
 3. Drag ClearFeed to your Applications folder
 4. Launch ClearFeed from Applications
@@ -93,16 +93,16 @@ Download the appropriate installer for your operating system from the [Releases]
 
 **AppImage (Recommended)**
 1. Download the appropriate AppImage for your architecture:
-   - x64: **ClearFeed-1.0.0.AppImage**
-   - ARM64: **ClearFeed-1.0.0-arm64.AppImage**
-2. Make it executable: `chmod +x ClearFeed-1.0.0*.AppImage`
-3. Run the application: `./ClearFeed-1.0.0*.AppImage`
+   - x64: **ClearFeed-0.1.0.AppImage**
+   - ARM64: **ClearFeed-0.1.0-arm64.AppImage**
+2. Make it executable: `chmod +x ClearFeed-0.1.0*.AppImage`
+3. Run the application: `./ClearFeed-0.1.0*.AppImage`
 
 **Portable Version**
 1. Download the appropriate tar.gz for your architecture:
-   - x64: **ClearFeed-1.0.0.tar.gz**
-   - ARM64: **ClearFeed-1.0.0-arm64.tar.gz**
-2. Extract: `tar -xzf ClearFeed-1.0.0*.tar.gz`
+   - x64: **ClearFeed-0.1.0.tar.gz**
+   - ARM64: **ClearFeed-0.1.0-arm64.tar.gz**
+2. Extract: `tar -xzf ClearFeed-0.1.0*.tar.gz`
 3. Run the application from the extracted directory
 
 ## Getting Started
@@ -119,7 +119,16 @@ Download the appropriate installer for your operating system from the [Releases]
 
 **Why are there not photos in some feeds?**: Some RSS feed do not contain preview images! 
 
-**What are some good RSS feeds?**: https://www.404media.co/rss, https://www.theverge.com/rss/partner/subscriber-only-full-feed/rss.xml, https://www.nasa.gov/feeds/iotd-feed/, https://www.nasa.gov/news-release/feed/, https://www.nasa.gov/technology/feed/, https://feeds.bbci.co.uk/news/world/rss.xml, https://feeds.npr.org/1004/rss.xml, https://techcrunch.com/feed/, https://www.bloomberg.com/feed, https://feeds.finance.yahoo.com/rss/2.0/headline?s=yhoo, http://feeds.arstechnica.com/arstechnica/index, https://www.wired.com/feed/rss, https://www.wired.com/feed/tag/ai/latest/rss, https://cointelegraph.com/rss, https://coinjournal.net/news/feed/, https://feeds.feedburner.com/TheHackersNews?format=xml, 
+**Are More Features Coming Soon?**: Yes! I am working on adding more features to ClearFeed. Some of the features we are working on include:
+- Feed Categorization
+- Feed Organization
+- Feed Customization
+- Feed Filtering
+- Feed Sorting
+- Sharing
+
+**What are some good RSS feeds?**: https://www.404media.co/rss, https://www.theverge.com/rss/partner/subscriber-only-full-feed/rss.xml, https://www.nasa.gov/feeds/iotd-feed/, https://www.nasa.gov/news-release/feed/, https://www.nasa.gov/technology/feed/, https://feeds.bbci.co.uk/news/world/rss.xml, https://feeds.npr.org/1004/rss.xml, https://techcrunch.com/feed/, https://www.bloomberg.com/feed, https://feeds.finance.yahoo.com/rss/2.0/headline?s=yhoo, http://feeds.arstechnica.com/arstechnica/index, https://www.wired.com/feed/rss, https://www.wired.com/feed/tag/ai/latest/rss, https://cointelegraph.com/rss, https://coinjournal.net/news/feed/, https://feeds.feedburner.com/TheHackersNews?format=xml.
+
 
 
 ## Tech Stack
