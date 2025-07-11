@@ -1,6 +1,6 @@
 # ClearFeed RSS Reader
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
 [![Platform](https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-blue)](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases)
 [![Downloads](https://img.shields.io/github/downloads/forresttindall/ClearFeed-RSS-Reader/total)](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases)
 [![Stars](https://img.shields.io/github/stars/forresttindall/ClearFeed-RSS-Reader)](https://github.com/forresttindall/ClearFeed-RSS-Reader/stargazers)
