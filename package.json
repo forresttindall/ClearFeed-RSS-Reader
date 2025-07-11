@@ -1,8 +1,8 @@
 {
   "name": "clearfeed",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "A clean and simple RSS feed reader",
-  "author": "ClearFeed Team",
+  "author": "Creationbase",
   "main": "Main.js",
   "scripts": {
     "start": "electron .",
@@ -20,7 +20,7 @@
   "build": {
     "appId": "com.clearfeed.rssreader",
     "productName": "ClearFeed",
-    "copyright": "Copyright © 2025 ClearFeed Team",
+    "copyright": "Copyright © 2025 Creationbase",
     "publish": {
       "provider": "github",
       "owner": "forresttindall",

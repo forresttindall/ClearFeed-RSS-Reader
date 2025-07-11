@@ -20,9 +20,9 @@
   --primary: rgba(255, 255, 255, 0.2);
   --secondary: #2c2c2c;
   --hover: #363636;
-  --switch-bg: #1a1a1a;
+  --switch-bg: #2c2c2c;
   --switch-border: rgba(255, 255, 255, 0.2);
-  --switch-circle: #1a1a1a;
+  --switch-circle: #ffffff;
 }
 
 /* Ensure background color is applied to full viewport */
