@@ -16,7 +16,7 @@
 
 
 
-A free and open-source minimalist RSS feed reader desktop application for Linux, macOS, and Windows. Completely private with no algorithms, no ads, no tracking, and fully offline capable.
+A free and open-source minimalist RSS feed reader desktop application for Linux, macOS, and Windows. Completely private with no algorithms, built in ad blocker, and popup blocker, no tracking, and fully offline capable.
 
 
 
@@ -127,7 +127,7 @@ Download the appropriate installer for your operating system from the [Releases]
 - Feed Sorting
 - Sharing
 
-**What are some good RSS feeds?**: https://www.404media.co/rss, https://www.theverge.com/rss/partner/subscriber-only-full-feed/rss.xml, https://www.nasa.gov/feeds/iotd-feed/, https://www.nasa.gov/news-release/feed/, https://www.nasa.gov/technology/feed/, https://feeds.bbci.co.uk/news/world/rss.xml, https://feeds.npr.org/1004/rss.xml, https://techcrunch.com/feed/, https://www.bloomberg.com/feed, https://feeds.finance.yahoo.com/rss/2.0/headline?s=yhoo, http://feeds.arstechnica.com/arstechnica/index, https://www.wired.com/feed/rss, https://www.wired.com/feed/tag/ai/latest/rss, https://cointelegraph.com/rss, https://coinjournal.net/news/feed/, https://feeds.feedburner.com/TheHackersNews?format=xml.
+**What are some good RSS feeds?**: https://www.404media.co/rss, https://www.theverge.com/rss/partner/subscriber-only-full-feed/rss.xml, https://www.nasa.gov/feeds/iotd-feed/, https://www.nasa.gov/news-release/feed/, https://www.nasa.gov/technology/feed/, https://feeds.bbci.co.uk/news/world/rss.xml, https://feeds.npr.org/1004/rss.xml, https://techcrunch.com/feed/, https://www.bloomberg.com/feed, https://finance.yahoo.com/news/rss-feeds, http://feeds.arstechnica.com/arstechnica/index, https://www.wired.com/feed/rss, https://www.wired.com/feed/tag/ai/latest/rss, https://cointelegraph.com/rss, https://coinjournal.net/news/feed/, https://feeds.feedburner.com/TheHackersNews?format=xml.
 
 
 

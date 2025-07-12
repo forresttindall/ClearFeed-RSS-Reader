@@ -557,11 +557,16 @@ button:hover {
 }
 
 .article-description {
-  margin: 0.75rem 0;
+  margin: 0.5rem 0;
   color: var(--text);
   opacity: 0.8;
-  font-size: 0.9rem;
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .article-info {
@@ -759,8 +764,12 @@ button:hover {
   background: var(--hover);
 }
 
+.github-button,
 .donate-button {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   width: 100%;
   padding: 0.75rem;
   text-align: center;
@@ -769,14 +778,96 @@ button:hover {
   text-decoration: none;
   border-radius: 6px;
   transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
 }
 
+.github-button:hover,
 .donate-button:hover {
   background-color: var(--hover);
 }
 
+.github-button:last-child,
+.donate-button:last-child {
+  margin-bottom: 0;
+}
+
+/* Software Update Styles */
+.update-section {
+  margin: 1rem 0;
+}
+
+.update-section h4 {
+  margin: 0 0 0.5rem 0;
+  font-size: 0.875rem;
+  color: var(--text);
+  font-weight: 600;
+}
+
+.update-button {
+  display: block;
+  width: 100%;
+  padding: 0.5rem 0.75rem;
+  background: var(--secondary);
+  color: var(--text);
+  border: none;
+  border-radius: 6px;
+  text-align: center;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+  margin-bottom: 0.5rem;
+}
+
+.update-button:hover {
+  background: var(--hover);
+}
+
+.update-button:disabled {
+  background: var(--secondary);
+  color: var(--text);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.update-status {
+  font-size: 0.75rem;
+  color: var(--text);
+  margin-bottom: 0.5rem;
+  text-align: center;
+  padding: 0.25rem;
+}
+
+.update-status.success {
+  color: #28a745;
+}
+
+.update-status.error {
+  color: #dc3545;
+}
+
+.update-status.info {
+  color: var(--primary);
+}
+
+.download-button {
+  background: var(--secondary);
+}
+
+.download-button:hover {
+  background: var(--hover);
+}
+
+.install-button {
+  background: var(--secondary);
+}
+
+.install-button:hover {
+  background: var(--hover);
+}
+
 .article-author {
   opacity: 0.8;
+  font-size: 0.75rem;
 }
 
 .article-card.read .article-author {
@@ -1011,19 +1102,21 @@ button:hover {
 }
 
 .article-viewer-header {
-    padding: 1rem 2rem;
+    padding: 0 0 0.25rem 0rem;
     border-bottom: 1px solid var(--secondary);
 }
 
 .article-viewer-header h1 {
-    margin: 0 0 0.5rem 0;
-    font-size: 1.5rem;
+    margin: 0 0 0.25rem 0;
+    font-size: 1.25rem;
     color: var(--text);
+    line-height: 1.2;
 }
 
 .article-source {
     color: var(--text-secondary);
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    margin: 0;
 }
 
 .article-frame {
@@ -1061,9 +1154,35 @@ button:hover {
 .article-image-placeholder {
     width: 100%;
     height: 100%;
-    background: linear-gradient(45deg, var(--secondary), var(--hover));
+    background: var(--secondary);
     display: flex;
     align-items: center;
     justify-content: center;
     color: var(--text-secondary);
+}
+
+.article-image-placeholder svg {
+    opacity: 0.6;
+}
+
+/* Context menu styles */
+.context-menu {
+    background: var(--secondary);
+    border: 1px solid var(--hover);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    padding: 4px 0;
+    min-width: 120px;
+    font-size: 0.9rem;
+}
+
+.context-menu-item {
+    padding: 8px 16px;
+    cursor: pointer;
+    color: var(--text);
+    transition: background-color 0.2s ease;
+}
+
+.context-menu-item:hover {
+    background-color: var(--hover);
 }

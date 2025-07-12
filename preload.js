@@ -12,7 +12,11 @@ const validChannels = [
     'mark-as-read',
     'delete-feed',
     'update-feeds',
-    'cleanup-database'
+    'cleanup-database',
+    'log-popup-attempt',
+    'check-for-updates',
+    'download-update',
+    'install-update'
 ];
 
 // Create the API object
@@ -28,6 +32,13 @@ const electronAPI = {
     shell: {
         openExternal: (url) => {
             return shell.openExternal(url);
+        }
+    },
+    logPopupAttempt: (method, url) => {
+        try {
+            ipcRenderer.invoke('log-popup-attempt', { method, url, timestamp: Date.now() });
+        } catch (error) {
+            console.error('Failed to log popup attempt:', error);
         }
     }
 };

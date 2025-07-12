@@ -11,7 +11,8 @@ import {
   Trash,
   Gear,
   ArrowsClockwise,
-  ArrowLeft
+  ArrowLeft,
+  GithubLogo
 } from 'phosphor-react';
 import '../styles/Dashboard.css';
 
@@ -24,6 +25,130 @@ const getElectron = () => {
     }
     console.error('Electron not available');
     return null;
+};
+
+// Component for handling article images with fallbacks
+const ArticleImage = ({ article, feedsMap }) => {
+  const [currentImageSrc, setCurrentImageSrc] = useState(article.imageUrl);
+  const [imageAttempts, setImageAttempts] = useState(0);
+  
+  const getFallbackImages = (article, feedsMap) => {
+    const fallbacks = [];
+    
+    if (article.imageUrl) {
+      fallbacks.push(article.imageUrl);
+    }
+    
+    // Try to get domain from article link or feed URL
+    let domain = null;
+    try {
+      if (article.link) {
+        domain = new URL(article.link).hostname;
+      } else if (feedsMap[article.feedId]) {
+        domain = new URL(feedsMap[article.feedId]).hostname;
+      }
+    } catch (e) {
+      console.log('Could not parse domain for fallback images:', e);
+    }
+    
+    if (domain) {
+      console.log('Trying fallback images for domain:', domain);
+      
+      // Clean domain (remove www. prefix for better matching)
+      const cleanDomain = domain.replace(/^www\./, '');
+      
+      // Site-specific image handling for major news outlets
+      if (cleanDomain.includes('wired.com')) {
+        fallbacks.push('https://www.wired.com/wp-content/themes/wired/assets/images/wired-logo.svg');
+        fallbacks.push('https://www.wired.com/wp-content/themes/wired/assets/images/wired-logo.png');
+        fallbacks.push('https://www.wired.com/favicon.ico');
+      } else if (cleanDomain.includes('bloomberg.com')) {
+        fallbacks.push('https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iKIWgaiJUtss/v2/pidjEfPlU1QWZop3vfGKsrX.ke8XuWirGYh1PKgEw44kE/200x200.png');
+        fallbacks.push('https://www.bloomberg.com/favicon.ico');
+      } else if (cleanDomain.includes('yahoo.com')) {
+        fallbacks.push('https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png');
+        fallbacks.push('https://www.yahoo.com/favicon.ico');
+      } else if (cleanDomain.includes('cnn.com')) {
+        fallbacks.push('https://cdn.cnn.com/cnn/.e/img/3.0/global/misc/cnn-logo.png');
+      } else if (cleanDomain.includes('bbc.com') || cleanDomain.includes('bbc.co.uk')) {
+        fallbacks.push('https://static.files.bbci.co.uk/ws/simorgh-assets/public/news/images/metadata/poster-1024x576.png');
+      } else if (cleanDomain.includes('reuters.com')) {
+        fallbacks.push('https://www.reuters.com/pf/resources/images/reuters/reuters-default.png');
+      } else if (cleanDomain.includes('techcrunch.com')) {
+        fallbacks.push('https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png');
+      }
+      
+      // High-resolution favicon services (try both original and clean domain)
+      fallbacks.push(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
+      fallbacks.push(`https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=128`);
+      fallbacks.push(`https://icons.duckduckgo.com/ip3/${domain}.ico`);
+      fallbacks.push(`https://icons.duckduckgo.com/ip3/${cleanDomain}.ico`);
+      
+      // Try both original and clean domain for all paths
+      const domains = [domain, cleanDomain];
+      
+      domains.forEach(d => {
+        // Apple touch icons (high resolution)
+        fallbacks.push(`https://${d}/apple-touch-icon-180x180.png`);
+        fallbacks.push(`https://${d}/apple-touch-icon.png`);
+        fallbacks.push(`https://${d}/apple-touch-icon-precomposed.png`);
+        
+        // Standard favicons
+        fallbacks.push(`https://${d}/favicon.ico`);
+        fallbacks.push(`https://${d}/favicon.png`);
+        
+        // Social share images (Open Graph)
+        fallbacks.push(`https://${d}/og-image.png`);
+        fallbacks.push(`https://${d}/og-image.jpg`);
+        fallbacks.push(`https://${d}/images/og-image.png`);
+        fallbacks.push(`https://${d}/assets/images/og-image.png`);
+        
+        // Twitter card images
+        fallbacks.push(`https://${d}/twitter-card.png`);
+        fallbacks.push(`https://${d}/twitter-card.jpg`);
+        
+        // Common logo paths
+        fallbacks.push(`https://${d}/logo.png`);
+        fallbacks.push(`https://${d}/logo.svg`);
+        fallbacks.push(`https://${d}/assets/logo.png`);
+        fallbacks.push(`https://${d}/images/logo.png`);
+        fallbacks.push(`https://${d}/static/logo.png`);
+        fallbacks.push(`https://${d}/img/logo.png`);
+      });
+    }
+    
+    return fallbacks;
+  };
+  
+  const handleImageError = () => {
+    const fallbacks = getFallbackImages(article, feedsMap);
+    const nextAttempt = imageAttempts + 1;
+    
+    if (nextAttempt < fallbacks.length) {
+      setCurrentImageSrc(fallbacks[nextAttempt]);
+      setImageAttempts(nextAttempt);
+    } else {
+      // All fallbacks failed, show placeholder
+      setCurrentImageSrc(null);
+    }
+  };
+  
+  if (!currentImageSrc) {
+    return (
+      <div className="article-image-placeholder">
+        <Newspaper size={32} />
+      </div>
+    );
+  }
+  
+  return (
+    <img 
+      src={currentImageSrc}
+      alt=""
+      onError={handleImageError}
+      onLoad={() => console.log('Image loaded successfully:', currentImageSrc)}
+    />
+  );
 };
 
 
@@ -55,6 +180,11 @@ function Dashboard() {
 
   const [savedScrollPosition, setSavedScrollPosition] = useState(0);
   const [showDatabaseSettings, setShowDatabaseSettings] = useState(false);
+  const [updateStatus, setUpdateStatus] = useState(null);
+  const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [updateInfo, setUpdateInfo] = useState(null);
+  const [temporaryButtonText, setTemporaryButtonText] = useState(null);
 
 
 
@@ -429,6 +559,115 @@ function Dashboard() {
     setRetentionDays(days);
   };
 
+  const handleCheckForUpdates = async () => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+      console.error('IPC not available');
+      setUpdateStatus('Error: IPC not available');
+      return;
+    }
+
+    setIsCheckingForUpdates(true);
+    setUpdateStatus('Checking for updates...');
+
+    try {
+      const result = await electronInstance.ipcRenderer.invoke('check-for-updates');
+      
+      if (result.success) {
+        if (result.updateAvailable) {
+          setUpdateAvailable(true);
+          setUpdateInfo(result);
+          setUpdateStatus(`Update available: v${result.version}`);
+        } else {
+          setUpdateAvailable(false);
+          setUpdateStatus(null); // Don't show status for latest version
+          setTemporaryButtonText('You are running the latest version');
+          
+          // Clear the temporary text after 5 seconds
+          setTimeout(() => {
+            setTemporaryButtonText(null);
+          }, 5000);
+        }
+      } else {
+        setUpdateStatus(`Error: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error checking for updates:', err);
+      setUpdateStatus('Error checking for updates');
+    } finally {
+      setIsCheckingForUpdates(false);
+    }
+  };
+
+  const handleDownloadUpdate = async () => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+      console.error('IPC not available');
+      return;
+    }
+
+    setUpdateStatus('Downloading update...');
+
+    try {
+      const result = await electronInstance.ipcRenderer.invoke('download-update');
+      
+      if (result.success) {
+        setUpdateStatus('Update downloaded. Ready to install.');
+      } else {
+        setUpdateStatus(`Download error: ${result.error}`);
+      }
+    } catch (err) {
+      console.error('Error downloading update:', err);
+      setUpdateStatus('Error downloading update');
+    }
+  };
+
+  const handleInstallUpdate = async () => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+      console.error('IPC not available');
+      return;
+    }
+
+    if (!window.confirm('The application will restart to install the update. Continue?')) {
+      return;
+    }
+
+    setUpdateStatus('Installing update...');
+
+    try {
+      await electronInstance.ipcRenderer.invoke('install-update');
+    } catch (err) {
+      console.error('Error installing update:', err);
+      setUpdateStatus('Error installing update');
+    }
+  };
+
+  const clearUpdateStatus = () => {
+    setUpdateStatus(null);
+    setUpdateAvailable(false);
+    setUpdateInfo(null);
+    setTemporaryButtonText(null);
+  };
+
+  const handleOpenGitHub = () => {
+    const electronInstance = getElectron();
+    if (electronInstance?.shell?.openExternal) {
+      electronInstance.shell.openExternal('https://github.com/forresttindall/ClearFeed-RSS-Reader');
+    } else {
+      window.open('https://github.com/forresttindall/ClearFeed-RSS-Reader', '_blank');
+    }
+  };
+
+  const handleOpenDonate = () => {
+    const electronInstance = getElectron();
+    if (electronInstance?.shell?.openExternal) {
+      electronInstance.shell.openExternal('https://venmo.com/ForrestTindall');
+    } else {
+      window.open('https://venmo.com/ForrestTindall', '_blank');
+    }
+  };
+
   return (
     <div className={`dashboard ${font}`}>
       <div className="dashboard-wrapper">
@@ -519,14 +758,66 @@ function Dashboard() {
                 
                 <div className="settings-divider"></div>
                 
-                <a 
-                  href="https://venmo.com/ForrestTindall" 
-                  target="_blank" 
-                  rel="noopener noreferrer"
+                <div className="update-section">
+                  <h4>Software Updates</h4>
+                  <button 
+                    onClick={handleCheckForUpdates}
+                    className="update-button"
+                    disabled={isCheckingForUpdates}
+                  >
+                    {temporaryButtonText || (isCheckingForUpdates ? 'Checking...' : 'Check for Updates')}
+                  </button>
+                  
+                  {updateStatus && !updateStatus.includes('You are running the latest version') && (
+                    <div className="update-status">
+                      <span className="update-status-text">{updateStatus}</span>
+                      {updateStatus.includes('Error') && (
+                        <button 
+                          onClick={clearUpdateStatus}
+                          className="clear-status-button"
+                          title="Clear status"
+                        >
+                          ×
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  
+                  {updateAvailable && updateStatus && updateStatus.includes('Update available') && (
+                    <button 
+                      onClick={handleDownloadUpdate}
+                      className="update-button download-button"
+                    >
+                      Download Update
+                    </button>
+                  )}
+                  
+                  {updateStatus && updateStatus.includes('Ready to install') && (
+                    <button 
+                      onClick={handleInstallUpdate}
+                      className="update-button install-button"
+                    >
+                      Install & Restart
+                    </button>
+                  )}
+                </div>
+                
+                <div className="settings-divider"></div>
+                
+                <button 
+                  onClick={handleOpenGitHub}
+                  className="github-button"
+                >
+                  <GithubLogo size={16} />
+                  GitHub
+                </button>
+                
+                <button 
+                  onClick={handleOpenDonate}
                   className="donate-button"
                 >
                   Donate
-                </a>
+                </button>
               </div>
             )}
           </div>
@@ -654,26 +945,7 @@ function Dashboard() {
                                 onClick={() => handleArticleClick(article)}
                             >
                                 <div className="article-image-container">
-                                    {article.imageUrl ? (
-                                        <img 
-                                            src={article.imageUrl} 
-                                            alt=""
-                                            onError={(e) => {
-                                                console.error('Image failed to load:', article.imageUrl);
-                                                console.error('Article data:', article);
-                                                e.target.parentElement.innerHTML = `
-                                                    <div class="article-image-placeholder">
-                                                        <Newspaper size={32} />
-                                                    </div>
-                                                `;
-                                            }}
-                                            onLoad={() => console.log('Image loaded successfully:', article.imageUrl)}
-                                        />
-                                    ) : (
-                                        <div className="article-image-placeholder">
-                                            <Newspaper size={32} />
-                                        </div>
-                                    )}
+                                    <ArticleImage article={article} feedsMap={feedsMap} />
                                 </div>
                                 <div className="article-content">
                                     <div className="article-header">
@@ -749,6 +1021,86 @@ function Dashboard() {
               onChange={(e) => setNewFeedUrl(e.target.value)}
               placeholder="Enter RSS feed URL"
               className="feed-input"
+              onContextMenu={(e) => {
+                e.preventDefault();
+                const input = e.target;
+                const menu = document.createElement('div');
+                menu.className = 'context-menu';
+                menu.innerHTML = `
+                  <div class="context-menu-item" data-action="paste">Paste</div>
+                  <div class="context-menu-item" data-action="cut">Cut</div>
+                  <div class="context-menu-item" data-action="copy">Copy</div>
+                  <div class="context-menu-item" data-action="selectall">Select All</div>
+                `;
+                
+                menu.style.position = 'fixed';
+                menu.style.left = e.clientX + 'px';
+                menu.style.top = e.clientY + 'px';
+                menu.style.zIndex = '10000';
+                
+                document.body.appendChild(menu);
+                
+                const handleMenuClick = async (menuEvent) => {
+                  const action = menuEvent.target.dataset.action;
+                  
+                  switch(action) {
+                    case 'paste':
+                      try {
+                        // First try the modern clipboard API
+                        const text = await navigator.clipboard.readText();
+                        console.log('✅ Clipboard read successful:', text.substring(0, 50) + '...');
+                        setNewFeedUrl(text);
+                      } catch (err) {
+                        console.log('🚫 Clipboard read failed, trying execCommand:', err);
+                        try {
+                          // Fallback to execCommand
+                          input.focus();
+                          input.select();
+                          const success = document.execCommand('paste');
+                          if (success) {
+                            console.log('✅ execCommand paste successful');
+                            // Get the value after paste
+                            setTimeout(() => {
+                              setNewFeedUrl(input.value);
+                            }, 10);
+                          } else {
+                            console.log('🚫 execCommand paste failed');
+                          }
+                        } catch (execErr) {
+                          console.log('🚫 execCommand paste error:', execErr);
+                        }
+                      }
+                      break;
+                    case 'cut':
+                      input.select();
+                      document.execCommand('cut');
+                      setNewFeedUrl('');
+                      break;
+                    case 'copy':
+                      input.select();
+                      document.execCommand('copy');
+                      break;
+                    case 'selectall':
+                      input.select();
+                      break;
+                  }
+                  
+                  document.body.removeChild(menu);
+                  document.removeEventListener('click', handleOutsideClick);
+                };
+                
+                const handleOutsideClick = (outsideEvent) => {
+                  if (!menu.contains(outsideEvent.target)) {
+                    document.body.removeChild(menu);
+                    document.removeEventListener('click', handleOutsideClick);
+                  }
+                };
+                
+                menu.addEventListener('click', handleMenuClick);
+                setTimeout(() => {
+                  document.addEventListener('click', handleOutsideClick);
+                }, 0);
+              }}
             />
             <div className="modal-buttons">
               <button 
