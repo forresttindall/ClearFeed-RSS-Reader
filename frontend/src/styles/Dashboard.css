@@ -765,7 +765,8 @@ button:hover {
 }
 
 .github-button,
-.donate-button {
+.donate-button,
+.bug-report-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -776,13 +777,17 @@ button:hover {
   background-color: var(--secondary);
   color: var(--text);
   text-decoration: none;
+  border: none;
   border-radius: 6px;
+  cursor: pointer;
   transition: background-color 0.2s ease;
   margin-bottom: 0.5rem;
+  font-size: 0.875rem;
 }
 
 .github-button:hover,
-.donate-button:hover {
+.donate-button:hover,
+.bug-report-button:hover {
   background-color: var(--hover);
 }
 

@@ -802,6 +802,20 @@ function Dashboard() {
                   )}
                 </div>
                 
+                <button 
+                  onClick={() => {
+                    const electronInstance = window.electronInstance || window.electron;
+                    if (electronInstance && electronInstance.shell) {
+                      electronInstance.shell.openExternal('mailto:Forrest@creationbase.io?subject=ClearFeed Bug Report');
+                    } else {
+                      window.open('mailto:Forrest@creationbase.io?subject=ClearFeed Bug Report', '_blank');
+                    }
+                  }}
+                  className="bug-report-button"
+                >
+                  Report a Bug
+                </button>
+                
                 <div className="settings-divider"></div>
                 
                 <button 
