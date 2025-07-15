@@ -178,10 +178,7 @@ function setupIPC() {
         'add-feed',
         'mark-as-read',
         'delete-feed',
-        'log-popup-attempt',
-        'check-for-updates',
-        'download-update',
-        'install-update'
+        'log-popup-attempt'
     ];
     
     console.log('Registering IPC channels:', channels);
@@ -241,9 +238,9 @@ function setupIPC() {
 
             const feedData = await parser.parseURL(url);
             
-            // Insert the feed
-            const insertFeedStmt = db.prepare('INSERT INTO feeds (url) VALUES (?)');
-            const feedResult = insertFeedStmt.run(url);
+            // Insert the feed with title and description
+            const insertFeedStmt = db.prepare('INSERT INTO feeds (url, title, description) VALUES (?, ?, ?)');
+            const feedResult = insertFeedStmt.run(url, feedData.title, feedData.description);
             const feedId = feedResult.lastInsertRowid;
             
             console.log('\n=== Feed Data ===');
@@ -345,10 +342,25 @@ function setupIPC() {
                 feedTitle: feedData.title 
             };
         } catch (error) {
+            console.error('Error in add-feed handler:', error);
+            console.error('Error message:', error.message);
+            console.error('Error stack:', error.stack);
+            
             if (error.message.includes('Status code')) {
-                throw new Error('Unable to access this feed. Please check the URL and try again.');
+                throw new Error(`Unable to access this feed. Status: ${error.message}`);
             }
-            throw new Error('Invalid RSS feed URL or feed not accessible');
+            if (error.message.includes('ENOTFOUND') || error.message.includes('ECONNREFUSED')) {
+                throw new Error('Network error: Unable to connect to the feed URL. Please check your internet connection and try again.');
+            }
+            if (error.message.includes('timeout')) {
+                throw new Error('Request timeout: The feed server is taking too long to respond. Please try again later.');
+            }
+            if (error.message.includes('Invalid XML') || error.message.includes('Non-whitespace')) {
+                throw new Error('Invalid RSS format: The URL does not contain valid RSS/XML content.');
+            }
+            
+            // Provide the actual error message for debugging
+            throw new Error(`Feed parsing error: ${error.message}`);
         }
     });
 
@@ -531,103 +543,6 @@ function setupIPC() {
             };
         } catch (err) {
             console.error('Error cleaning up database:', err);
-            return {
-                success: false,
-                error: err.message
-            };
-        }
-    });
-
-    // Handle checking for updates
-    ipcMain.handle('check-for-updates', async () => {
-        try {
-            const { autoUpdater } = require('electron-updater');
-            const isDev = process.env.NODE_ENV === 'development';
-            
-            if (isDev) {
-                return {
-                    success: false,
-                    error: 'Updates are disabled in development mode'
-                };
-            }
-            
-            console.log('Manually checking for updates...');
-            const updateCheckResult = await autoUpdater.checkForUpdates();
-            
-            if (updateCheckResult && updateCheckResult.updateInfo) {
-                return {
-                    success: true,
-                    updateAvailable: true,
-                    version: updateCheckResult.updateInfo.version,
-                    releaseDate: updateCheckResult.updateInfo.releaseDate
-                };
-            } else {
-                return {
-                    success: true,
-                    updateAvailable: false,
-                    message: 'You are running the latest version'
-                };
-            }
-        } catch (err) {
-            console.error('Error checking for updates:', err);
-            return {
-                success: false,
-                error: err.message
-            };
-        }
-    });
-    
-    // Handle downloading updates
-    ipcMain.handle('download-update', async () => {
-        try {
-            const { autoUpdater } = require('electron-updater');
-            const isDev = process.env.NODE_ENV === 'development';
-            
-            if (isDev) {
-                return {
-                    success: false,
-                    error: 'Updates are disabled in development mode'
-                };
-            }
-            
-            console.log('Starting update download...');
-            await autoUpdater.downloadUpdate();
-            
-            return {
-                success: true,
-                message: 'Update download started'
-            };
-        } catch (err) {
-            console.error('Error downloading update:', err);
-            return {
-                success: false,
-                error: err.message
-            };
-        }
-    });
-    
-    // Handle installing updates
-    ipcMain.handle('install-update', async () => {
-        try {
-            const { autoUpdater } = require('electron-updater');
-            const isDev = process.env.NODE_ENV === 'development';
-            
-            if (isDev) {
-                return {
-                    success: false,
-                    error: 'Updates are disabled in development mode'
-                };
-            }
-            
-            console.log('Installing update and restarting...');
-            autoUpdater.quitAndInstall();
-            
-            return {
-                success: true,
-                message: 'Installing update...'
-            };
-        } catch (err) {
-            console.error('Error installing update:', err);
             return {
                 success: false,
                 error: err.message

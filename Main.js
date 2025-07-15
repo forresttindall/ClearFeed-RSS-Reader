@@ -1,5 +1,4 @@
 const { app, BrowserWindow, ipcMain, session } = require('electron');
-const { autoUpdater } = require('electron-updater');
 const path = require('path');
 const isDev = process.env.NODE_ENV === 'development';
 const { setupIPC } = require('./ipc');
@@ -23,40 +22,6 @@ if (!require('fs').existsSync(preloadPath)) {
 
 console.log('Setting up IPC handlers...');
 setupIPC();
-
-// Configure auto-updater
-if (!isDev) {
-    console.log('Configuring auto-updater...');
-    autoUpdater.checkForUpdatesAndNotify();
-    
-    autoUpdater.on('checking-for-update', () => {
-        console.log('Checking for update...');
-    });
-    
-    autoUpdater.on('update-available', (info) => {
-        console.log('Update available:', info);
-    });
-    
-    autoUpdater.on('update-not-available', (info) => {
-        console.log('Update not available:', info);
-    });
-    
-    autoUpdater.on('error', (err) => {
-        console.log('Error in auto-updater:', err);
-    });
-    
-    autoUpdater.on('download-progress', (progressObj) => {
-        let log_message = "Download speed: " + progressObj.bytesPerSecond;
-        log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
-        log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
-        console.log(log_message);
-    });
-    
-    autoUpdater.on('update-downloaded', (info) => {
-        console.log('Update downloaded:', info);
-        autoUpdater.quitAndInstall();
-    });
-}
 
 function createWindow() {
     console.log('Creating window...');

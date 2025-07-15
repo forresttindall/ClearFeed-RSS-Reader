@@ -13,10 +13,7 @@ const validChannels = [
     'delete-feed',
     'update-feeds',
     'cleanup-database',
-    'log-popup-attempt',
-    'check-for-updates',
-    'download-update',
-    'install-update'
+    'log-popup-attempt'
 ];
 
 // Create the API object

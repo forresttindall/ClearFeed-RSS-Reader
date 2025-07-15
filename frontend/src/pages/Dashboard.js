@@ -180,11 +180,6 @@ function Dashboard() {
 
   const [savedScrollPosition, setSavedScrollPosition] = useState(0);
   const [showDatabaseSettings, setShowDatabaseSettings] = useState(false);
-  const [updateStatus, setUpdateStatus] = useState(null);
-  const [isCheckingForUpdates, setIsCheckingForUpdates] = useState(false);
-  const [updateAvailable, setUpdateAvailable] = useState(false);
-  const [updateInfo, setUpdateInfo] = useState(null);
-  const [temporaryButtonText, setTemporaryButtonText] = useState(null);
 
 
 
@@ -559,97 +554,6 @@ function Dashboard() {
     setRetentionDays(days);
   };
 
-  const handleCheckForUpdates = async () => {
-    const electronInstance = getElectron();
-    if (!electronInstance?.ipcRenderer) {
-      console.error('IPC not available');
-      setUpdateStatus('Error: IPC not available');
-      return;
-    }
-
-    setIsCheckingForUpdates(true);
-    setUpdateStatus('Checking for updates...');
-
-    try {
-      const result = await electronInstance.ipcRenderer.invoke('check-for-updates');
-      
-      if (result.success) {
-        if (result.updateAvailable) {
-          setUpdateAvailable(true);
-          setUpdateInfo(result);
-          setUpdateStatus(`Update available: v${result.version}`);
-        } else {
-          setUpdateAvailable(false);
-          setUpdateStatus(null); // Don't show status for latest version
-          setTemporaryButtonText('You are running the latest version');
-          
-          // Clear the temporary text after 5 seconds
-          setTimeout(() => {
-            setTemporaryButtonText(null);
-          }, 5000);
-        }
-      } else {
-        setUpdateStatus(`Error: ${result.error}`);
-      }
-    } catch (err) {
-      console.error('Error checking for updates:', err);
-      setUpdateStatus('Error checking for updates');
-    } finally {
-      setIsCheckingForUpdates(false);
-    }
-  };
-
-  const handleDownloadUpdate = async () => {
-    const electronInstance = getElectron();
-    if (!electronInstance?.ipcRenderer) {
-      console.error('IPC not available');
-      return;
-    }
-
-    setUpdateStatus('Downloading update...');
-
-    try {
-      const result = await electronInstance.ipcRenderer.invoke('download-update');
-      
-      if (result.success) {
-        setUpdateStatus('Update downloaded. Ready to install.');
-      } else {
-        setUpdateStatus(`Download error: ${result.error}`);
-      }
-    } catch (err) {
-      console.error('Error downloading update:', err);
-      setUpdateStatus('Error downloading update');
-    }
-  };
-
-  const handleInstallUpdate = async () => {
-    const electronInstance = getElectron();
-    if (!electronInstance?.ipcRenderer) {
-      console.error('IPC not available');
-      return;
-    }
-
-    if (!window.confirm('The application will restart to install the update. Continue?')) {
-      return;
-    }
-
-    setUpdateStatus('Installing update...');
-
-    try {
-      await electronInstance.ipcRenderer.invoke('install-update');
-    } catch (err) {
-      console.error('Error installing update:', err);
-      setUpdateStatus('Error installing update');
-    }
-  };
-
-  const clearUpdateStatus = () => {
-    setUpdateStatus(null);
-    setUpdateAvailable(false);
-    setUpdateInfo(null);
-    setTemporaryButtonText(null);
-  };
-
   const handleOpenGitHub = () => {
     const electronInstance = getElectron();
     if (electronInstance?.shell?.openExternal) {
@@ -757,50 +661,6 @@ function Dashboard() {
                 </button>
                 
                 <div className="settings-divider"></div>
-                
-                <div className="update-section">
-                  <h4>Software Updates</h4>
-                  <button 
-                    onClick={handleCheckForUpdates}
-                    className="update-button"
-                    disabled={isCheckingForUpdates}
-                  >
-                    {temporaryButtonText || (isCheckingForUpdates ? 'Checking...' : 'Check for Updates')}
-                  </button>
-                  
-                  {updateStatus && !updateStatus.includes('You are running the latest version') && (
-                    <div className="update-status">
-                      <span className="update-status-text">{updateStatus}</span>
-                      {updateStatus.includes('Error') && (
-                        <button 
-                          onClick={clearUpdateStatus}
-                          className="clear-status-button"
-                          title="Clear status"
-                        >
-                          ×
-                        </button>
-                      )}
-                    </div>
-                  )}
-                  
-                  {updateAvailable && updateStatus && updateStatus.includes('Update available') && (
-                    <button 
-                      onClick={handleDownloadUpdate}
-                      className="update-button download-button"
-                    >
-                      Download Update
-                    </button>
-                  )}
-                  
-                  {updateStatus && updateStatus.includes('Ready to install') && (
-                    <button 
-                      onClick={handleInstallUpdate}
-                      className="update-button install-button"
-                    >
-                      Install & Restart
-                    </button>
-                  )}
-                </div>
                 
                 <button 
                   onClick={() => {
