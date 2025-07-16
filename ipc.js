@@ -13,33 +13,18 @@ const parser = new RSSParser({
 });
 
 function extractImageUrl(item, feedData) {
-    console.log('\nExtracting image for article:', item.title);
-    
     let imageUrl = null;
-    const sources = [];
 
     // Try enclosure first (many RSS feeds use this for images)
     if (item.enclosure && item.enclosure.url) {
-        sources.push({
-            type: 'enclosure',
-            raw: item.enclosure
-        });
-        
         const enclosureType = item.enclosure.type || '';
         if (enclosureType.startsWith('image/')) {
-            imageUrl = item.enclosure.url;
-            console.log('Found enclosure image:', imageUrl);
-            return imageUrl;
+            return item.enclosure.url;
         }
     }
 
     // Try media:thumbnail (Wired and many modern feeds use this)
     if (item['media:thumbnail']) {
-        sources.push({
-            type: 'media:thumbnail',
-            raw: item['media:thumbnail']
-        });
-
         // Handle both single thumbnail and array of thumbnails
         if (Array.isArray(item['media:thumbnail'])) {
             // Sort by width to get the largest thumbnail
@@ -48,24 +33,15 @@ function extractImageUrl(item, feedData) {
                 .sort((a, b) => parseInt(b.$.width) - parseInt(a.$.width));
             
             if (thumbnails.length > 0) {
-                imageUrl = thumbnails[0].$.url;
-                console.log('Found largest media:thumbnail:', imageUrl, 'width:', thumbnails[0].$.width);
-                return imageUrl;
+                return thumbnails[0].$.url;
             }
         } else if (item['media:thumbnail'].$ && item['media:thumbnail'].$.url) {
-            imageUrl = item['media:thumbnail'].$.url;
-            console.log('Found media:thumbnail:', imageUrl);
-            return imageUrl;
+            return item['media:thumbnail'].$.url;
         }
     }
 
     // Try media:content as fallback
-    if (!imageUrl && item['media:content']) {
-        sources.push({
-            type: 'media:content',
-            raw: item['media:content']
-        });
-        
+    if (item['media:content']) {
         if (Array.isArray(item['media:content'])) {
             const mediaContent = item['media:content']
                 .filter(m => {
@@ -84,87 +60,53 @@ function extractImageUrl(item, feedData) {
                 });
 
             if (mediaContent.length > 0) {
-                imageUrl = mediaContent[0].$.url;
-                console.log('Found largest media:content image:', imageUrl);
-                return imageUrl;
+                return mediaContent[0].$.url;
             }
         } else if (item['media:content'].$ && item['media:content'].$.url) {
-            imageUrl = item['media:content'].$.url;
-            console.log('Found media:content image:', imageUrl);
-            return imageUrl;
+            return item['media:content'].$.url;
         }
     }
 
-    // Try content/description with improved regex patterns
-    if (!imageUrl && (item.content || item.description)) {
+    // Try content/description with optimized regex patterns
+    if (item.content || item.description) {
         const content = item.content || item.description;
-        sources.push({
-            type: 'content',
-            raw: 'content/description available'
-        });
         
-        // Try multiple image patterns
-        const imgPatterns = [
-            /<img[^>]+src=["']([^"'>]+)["'][^>]*>/gi,
-            /<img[^>]+src=([^\s>]+)[^>]*>/gi,
-            /src=["']([^"'>]*\.(jpg|jpeg|png|gif|webp))["']/gi,
-            /https?:\/\/[^\s<>"']*\.(jpg|jpeg|png|gif|webp)/gi
-        ];
+        // Single optimized regex for better performance
+        const imgPattern = /<img[^>]+src=["']([^"'>]+)["'][^>]*>/i;
+        const match = content.match(imgPattern);
         
-        for (const pattern of imgPatterns) {
-            const matches = content.matchAll(pattern);
-            for (const match of matches) {
-                let url = match[1] || match[0];
-                if (url && !url.includes('favicon') && 
-                    !url.includes('icon') && 
-                    !url.includes('pixel') &&
-                    !url.includes('tracking') &&
-                    !url.includes('1x1') &&
-                    url.length > 20) {
-                    
-                    // Decode HTML entities
-                    url = url.replace(/&amp;/g, '&')
-                             .replace(/&#038;/g, '&')
-                             .replace(/&lt;/g, '<')
-                             .replace(/&gt;/g, '>')
-                             .replace(/&quot;/g, '"')
-                             .replace(/&#39;/g, "'");
-                    
-                    imageUrl = url;
-                    console.log('Found content image:', imageUrl);
-                    return imageUrl;
-                }
+        if (match && match[1]) {
+            let url = match[1];
+            if (url && !url.includes('favicon') && 
+                !url.includes('icon') && 
+                !url.includes('pixel') &&
+                !url.includes('tracking') &&
+                !url.includes('1x1') &&
+                url.length > 20) {
+                
+                // Decode HTML entities
+                url = url.replace(/&amp;/g, '&')
+                         .replace(/&#038;/g, '&')
+                         .replace(/&lt;/g, '<')
+                         .replace(/&gt;/g, '>')
+                         .replace(/&quot;/g, '"')
+                         .replace(/&#39;/g, "'");
+                
+                return url;
             }
         }
     }
 
     // Try iTunes image (for podcast feeds)
-    if (!imageUrl && item['itunes:image']) {
-        sources.push({
-            type: 'itunes:image',
-            raw: item['itunes:image']
-        });
-        
-        if (item['itunes:image'].$ && item['itunes:image'].$.href) {
-            imageUrl = item['itunes:image'].$.href;
-            console.log('Found iTunes image:', imageUrl);
-            return imageUrl;
-        }
+    if (item['itunes:image'] && item['itunes:image'].$ && item['itunes:image'].$.href) {
+        return item['itunes:image'].$.href;
     }
 
     // Try feed-level image as last resort
-    if (!imageUrl && feedData.image && feedData.image.url) {
-        sources.push({
-            type: 'feed-image',
-            raw: feedData.image
-        });
-        
-        imageUrl = feedData.image.url;
-        console.log('Using feed-level image:', imageUrl);
-        return imageUrl;
+    if (feedData.image && feedData.image.url) {
+        return feedData.image.url;
     }
 
-    console.log('No suitable image found. Attempted sources:', sources);
     return null;
 }
 
@@ -242,10 +184,6 @@ function setupIPC() {
             const insertFeedStmt = db.prepare('INSERT INTO feeds (url, title, description) VALUES (?, ?, ?)');
             const feedResult = insertFeedStmt.run(url, feedData.title, feedData.description);
             const feedId = feedResult.lastInsertRowid;
-            
-            console.log('\n=== Feed Data ===');
-            console.log('Title:', feedData.title);
-            console.log('Items:', feedData.items.length);
 
             // Prepare the article insert statement
             const insertArticleStmt = db.prepare(`
@@ -254,87 +192,60 @@ function setupIPC() {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
 
-            // Process each article
-             for (const item of feedData.items) {
-                 console.log('\n=== Processing Article ===');
-                 console.log('Title:', item.title);
-                 
-                 // Log the raw item structure
-                 console.log('Raw item structure:', Object.keys(item));
-                 
-                 // Log specific fields we're interested in
-                 if (item['media:content']) {
-                     console.log('media:content:', JSON.stringify(item['media:content'], null, 2));
-                 }
-                 if (item.content) {
-                     console.log('Content length:', item.content.length);
-                     console.log('Content preview:', item.content.substring(0, 200));
-                 }
-                 if (item.description) {
-                     console.log('Description length:', item.description.length);
-                     console.log('Description preview:', item.description.substring(0, 200));
-                 }
-                 if (item.enclosure) {
-                     console.log('Enclosure:', item.enclosure);
-                 }
+            // Process articles in batches for better performance
+            const batchSize = 10;
+            const articles = feedData.items || [];
+            
+            for (let i = 0; i < articles.length; i += batchSize) {
+                const batch = articles.slice(i, i + batchSize);
+                
+                // Use transaction for batch processing
+                const transaction = db.transaction(() => {
+                    for (const item of batch) {
+                        const imageUrl = extractImageUrl(item, feedData);
+                        
+                        // Get author and description
+                        let author = item.author || 
+                                    item.creator || 
+                                    item['dc:creator'] || 
+                                    null;
+                                    
+                        let description = item.description || 
+                                         item.summary || 
+                                         item.content || 
+                                         null;
+                                         
+                        if (description) {
+                            // Clean up HTML entities and special characters
+                            description = description
+                                .replace(/<[^>]*>/g, ' ')
+                                .replace(/&\w+;/g, '')
+                                .replace(/&#\d+;/g, '')
+                                .replace(/\s+/g, ' ')
+                                .replace(/[^\w\s.,!?-]/g, '')
+                                .trim();
+                            
+                            description = description.substring(0, 200) + (description.length > 200 ? '...' : '');
+                        }
 
-                 const imageUrl = extractImageUrl(item, feedData);
-                 console.log('Final image URL:', imageUrl);
-                 
-                 // Get author and description
-                 let author = item.author || 
-                             item.creator || 
-                             item['dc:creator'] || 
-                             null;
-                             
-                 let description = item.description || 
-                                  item.summary || 
-                                  item.content || 
-                                  null;
-                                  
-                 if (description) {
-                     // Clean up HTML entities and special characters
-                     description = description
-                         .replace(/<[^>]*>/g, ' ')
-                         .replace(/&\w+;/g, '')
-                         .replace(/&#\d+;/g, '')
-                         .replace(/\s+/g, ' ')
-                         .replace(/[^\w\s.,!?-]/g, '')
-                         .trim();
-                     
-                     description = description.substring(0, 200) + (description.length > 200 ? '...' : '');
-                 }
-
-                 // Add debug logging
-                 console.log('Article data:', {
-                     title: item.title,
-                     imageUrl,
-                     author,
-                     description: description?.substring(0, 50) + '...'
-                 });
-
-                 try {
-                     const articleResult = insertArticleStmt.run(
-                         item.title,
-                         item.link,
-                         new Date(item.pubDate).toISOString(),
-                         feedId,
-                         imageUrl,
-                         author,
-                         description
-                     );
-                     
-                     console.log('Article inserted:', {
-                         id: articleResult.lastInsertRowid,
-                         title: item.title,
-                         imageUrl: imageUrl,
-                         feedId: feedId
-                     });
-                 } catch (err) {
-                     console.error('Database error while inserting article:', err);
-                     throw err;
-                 }
-             }
+                        try {
+                            insertArticleStmt.run(
+                                item.title,
+                                item.link,
+                                new Date(item.pubDate).toISOString(),
+                                feedId,
+                                imageUrl,
+                                author,
+                                description
+                            );
+                        } catch (err) {
+                            console.error('Database error while inserting article:', err);
+                        }
+                    }
+                });
+                
+                transaction();
+            }
 
             return { 
                 success: true, 
@@ -343,8 +254,6 @@ function setupIPC() {
             };
         } catch (error) {
             console.error('Error in add-feed handler:', error);
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
             
             if (error.message.includes('Status code')) {
                 throw new Error(`Unable to access this feed. Status: ${error.message}`);
@@ -411,8 +320,6 @@ function setupIPC() {
     // Handle updating all feeds
     ipcMain.handle('update-feeds', async () => {
         try {
-            console.log('Starting feed update process...');
-            
             // Get all feeds from database
             const feedsStmt = db.prepare('SELECT * FROM feeds');
             const feeds = feedsStmt.all();
@@ -436,62 +343,71 @@ function setupIPC() {
                 ) VALUES (?, ?, ?, ?, ?, ?, ?)
             `);
             
-            // Update each feed
+            // Update each feed with improved error handling
             for (const feed of feeds) {
                 try {
-                    console.log(`Updating feed: ${feed.url}`);
                     const feedData = await parser.parseURL(feed.url);
-                    
                     let newArticlesCount = 0;
                     
-                    // Process each article
-                    for (const item of feedData.items) {
-                        const imageUrl = extractImageUrl(item, feedData);
+                    // Process articles in batches
+                    const batchSize = 10;
+                    const articles = feedData.items || [];
+                    
+                    for (let i = 0; i < articles.length; i += batchSize) {
+                        const batch = articles.slice(i, i + batchSize);
                         
-                        // Get author and description
-                        let author = item.author || 
-                                    item.creator || 
-                                    item['dc:creator'] || 
-                                    null;
+                        // Use transaction for batch processing
+                        const transaction = db.transaction(() => {
+                            for (const item of batch) {
+                                const imageUrl = extractImageUrl(item, feedData);
+                                
+                                // Get author and description
+                                let author = item.author || 
+                                            item.creator || 
+                                            item['dc:creator'] || 
+                                            null;
+                                            
+                                let description = item.description || 
+                                                 item.summary || 
+                                                 item.content || 
+                                                 null;
+                                                 
+                                if (description) {
+                                    // Clean up HTML entities and special characters
+                                    description = description
+                                        .replace(/<[^>]*>/g, ' ')
+                                        .replace(/&\w+;/g, '')
+                                        .replace(/&#\d+;/g, '')
+                                        .replace(/\s+/g, ' ')
+                                        .replace(/[^\w\s.,!?-]/g, '')
+                                        .trim();
                                     
-                        let description = item.description || 
-                                         item.summary || 
-                                         item.content || 
-                                         null;
-                                         
-                        if (description) {
-                            // Clean up HTML entities and special characters
-                            description = description
-                                .replace(/<[^>]*>/g, ' ')
-                                .replace(/&\w+;/g, '')
-                                .replace(/&#\d+;/g, '')
-                                .replace(/\s+/g, ' ')
-                                .replace(/[^\w\s.,!?-]/g, '')
-                                .trim();
-                            
-                            description = description.substring(0, 200) + (description.length > 200 ? '...' : '');
-                        }
-                        
-                        try {
-                            const result = insertArticleStmt.run(
-                                item.title,
-                                item.link,
-                                new Date(item.pubDate).toISOString(),
-                                feed.id,
-                                imageUrl,
-                                author,
-                                description
-                            );
-                            
-                            if (result.changes > 0) {
-                                newArticlesCount++;
+                                    description = description.substring(0, 200) + (description.length > 200 ? '...' : '');
+                                }
+                                
+                                try {
+                                    const result = insertArticleStmt.run(
+                                        item.title,
+                                        item.link,
+                                        new Date(item.pubDate).toISOString(),
+                                        feed.id,
+                                        imageUrl,
+                                        author,
+                                        description
+                                    );
+                                    
+                                    if (result.changes > 0) {
+                                        newArticlesCount++;
+                                    }
+                                } catch (err) {
+                                    // Silently continue on individual article errors
+                                }
                             }
-                        } catch (err) {
-                            console.error('Error inserting article:', err);
-                        }
+                        });
+                        
+                        transaction();
                     }
                     
-                    console.log(`Feed ${feed.url} updated with ${newArticlesCount} new articles`);
                     updatedFeeds++;
                     totalNewArticles += newArticlesCount;
                     
@@ -499,8 +415,6 @@ function setupIPC() {
                     console.error(`Error updating feed ${feed.url}:`, err);
                 }
             }
-            
-            console.log(`Feed update complete. Updated ${updatedFeeds} feeds with ${totalNewArticles} new articles`);
             
             return {
                 success: true,

@@ -330,6 +330,16 @@ function createWindow() {
                 // Block right-click context menu popups
                  document.addEventListener('contextmenu', function(e) {
                      const target = e.target;
+                     // Allow context menu on input fields, textareas, and contenteditable elements
+                     if (target.tagName === 'INPUT' || 
+                         target.tagName === 'TEXTAREA' || 
+                         target.contentEditable === 'true' ||
+                         target.closest('.feed-input') ||
+                         target.closest('.modal-overlay') ||
+                         target.closest('.modal-content')) {
+                         return; // Allow context menu
+                     }
+                     // Block context menu on links and clickable elements
                      if (target.tagName === 'A' || target.onclick || target.href) {
                          e.preventDefault();
                          console.log('Blocked context menu popup');
@@ -368,9 +378,18 @@ function createWindow() {
                          return false;
                      }
                      
-                     // Block clicks on elements with popup-related classes or IDs
+                     // Block clicks on elements with popup-related classes or IDs (but allow RSS feed modal)
                      const element = target.closest('[class*="popup"], [class*="overlay"], [class*="modal"], [id*="popup"], [id*="overlay"], [id*="modal"]');
                      if (element) {
+                         const className = element.className || '';
+                         const id = element.id || '';
+                         // Allow RSS feed modal interactions
+                         if (className.includes('feed') || id.includes('feed') || 
+                             className.includes('rss') || id.includes('rss') ||
+                             className.includes('modal-overlay') || 
+                             className.includes('modal-content')) {
+                             return; // Allow RSS feed modal
+                         }
                          console.log('Blocked popup element click:', element.className || element.id);
                          e.preventDefault();
                          e.stopPropagation();
@@ -391,11 +410,19 @@ function createWindow() {
                      }
                  }, true);
                  
-                 // Block overlay and modal creation
+                 // Block overlay and modal creation (but allow RSS feed modal)
                  const popupObserver = new MutationObserver(function(mutations) {
                      mutations.forEach(function(mutation) {
                          mutation.addedNodes.forEach(function(node) {
                              if (node.nodeType === 1) { // Element node
+                                 // Allow RSS feed modal and related elements
+                                 const className = node.className || '';
+                                 const id = node.id || '';
+                                 if (className.includes('feed') || id.includes('feed') || 
+                                     className.includes('rss') || id.includes('rss')) {
+                                     return; // Allow RSS feed related modals
+                                 }
+                                 
                                  // Check for popup/overlay elements
                                  if (node.matches && (
                                      node.matches('[class*="popup"]') ||
@@ -415,6 +442,13 @@ function createWindow() {
                                  const popupElements = node.querySelectorAll && node.querySelectorAll('[class*="popup"], [class*="overlay"], [class*="modal"], [id*="popup"], [id*="overlay"], [id*="modal"]');
                                  if (popupElements) {
                                      popupElements.forEach(function(el) {
+                                         const elClassName = el.className || '';
+                                         const elId = el.id || '';
+                                         // Don't block RSS feed related elements
+                                         if (elClassName.includes('feed') || elId.includes('feed') || 
+                                             elClassName.includes('rss') || elId.includes('rss')) {
+                                             return;
+                                         }
                                          console.log('Blocked nested popup element:', el.className || el.id);
                                          el.remove();
                                      });
@@ -805,81 +839,37 @@ function createWindow() {
                       '}';
                  document.head.appendChild(style);
                  
-                 // Periodic cleanup function to remove subscription modals
+                 // Optimized cleanup function - much more efficient
                  const cleanupSubscriptionModals = () => {
                      try {
-                         const suspiciousSelectors = [
-                              '[class*="subscribe"]',
-                              '[class*="newsletter"]', 
-                              '[class*="signup"]',
-                              '[class*="modal"]',
-                              '[class*="overlay"]',
-                              '[class*="popup"]',
-                              '[id*="subscribe"]',
-                              '[id*="newsletter"]',
-                              '[id*="modal"]',
-                              '[id*="popup"]',
-                              '[data-testid*="subscribe"]',
-                              '[data-testid*="newsletter"]',
-                              '[data-module*="subscribe"]',
-                              '/* The Verge specific patterns */',
-                              '[class*="_1ds4jca"]',
-                              '[class*="duet-"]',
-                              '[class*="email-capture"]',
-                              'div[style*="position: fixed"]',
-                              'div[style*="z-index: 9"]',
-                              'div[style*="z-index: 10"]',
-                              'div[style*="z-index: 11"]',
-                              'div[style*="z-index: 12"]'
+                         // Use more targeted selectors to reduce DOM queries
+                         const targetSelectors = [
+                              '[class*="modal"][style*="position: fixed"]',
+                              '[class*="overlay"][style*="position: fixed"]',
+                              '[class*="subscribe"][style*="position: fixed"]',
+                              '[id*="modal"][style*="position: fixed"]',
+                              'div[style*="z-index: 999"], div[style*="z-index: 1000"], div[style*="z-index: 9999"]'
                           ];
                          
-                         suspiciousSelectors.forEach(selector => {
-                             const elements = document.querySelectorAll(selector);
-                             elements.forEach(el => {
-                                 const text = el.textContent || '';
-                                 const isVisible = el.offsetWidth > 0 && el.offsetHeight > 0;
-                                 const computedStyle = window.getComputedStyle(el);
-                                 const isFixed = computedStyle.position === 'fixed';
-                                 const hasHighZIndex = parseInt(computedStyle.zIndex) > 1000;
-                                 
-                                 // Check for subscription-related text patterns
-                                 const suspiciousText = text.toLowerCase();
-                                 const hasSubscriptionText = suspiciousText.includes('subscribe') ||
-                                     suspiciousText.includes('newsletter') ||
-                                     suspiciousText.includes('sign up') ||
-                                     suspiciousText.includes('email') ||
-                                     suspiciousText.includes('join') ||
-                                     suspiciousText.includes('get updates') ||
-                                     suspiciousText.includes('stay informed');
-                                 
-                                 // Check for modal-like characteristics
-                                 const isModalLike = (isFixed && hasHighZIndex) || 
-                                     el.className.includes('modal') ||
-                                     el.className.includes('overlay') ||
-                                     el.className.includes('popup') ||
-                                     el.className.includes('_1ds4jca');
-                                 
-                                 if ((isVisible && hasSubscriptionText) || isModalLike) {
-                                     console.log('🚫 Periodic cleanup removing:', {
-                                         selector,
-                                         className: el.className,
-                                         id: el.id,
-                                         text: text.substring(0, 50),
-                                         isFixed,
-                                         zIndex: computedStyle.zIndex
-                                     });
+                         // Only check elements that are likely to be modals (fixed position, high z-index)
+                         targetSelectors.forEach(selector => {
+                             try {
+                                 const elements = document.querySelectorAll(selector);
+                                 elements.forEach(el => {
+                                     const text = el.textContent?.toLowerCase() || '';
                                      
-                                     el.style.display = 'none !important';
-                                     el.style.visibility = 'hidden !important';
-                                     el.style.opacity = '0 !important';
-                                     el.style.pointerEvents = 'none !important';
-                                     try {
+                                     // Quick text check for subscription content
+                                     if (text.includes('subscribe') || text.includes('newsletter') || 
+                                         text.includes('sign up') || text.includes('email')) {
+                                         
+                                         console.log('🚫 Removing subscription modal:', el.className);
+                                         el.style.display = 'none';
                                          el.remove();
-                                     } catch (e) {
-                                         // Element might already be removed
                                      }
-                                 }
-                             });
+                                 });
+                             } catch (e) {
+                                 // Continue if selector fails
+                             }
                          });
                          
                          // Remove body scroll locks
@@ -887,17 +877,19 @@ function createWindow() {
                          document.body.classList.remove('modal-open', 'no-scroll');
                          
                      } catch (error) {
-                         console.error('❌ Error in periodic cleanup:', error);
+                         console.error('❌ Error in cleanup:', error);
                      }
                  };
                  
-                 // Run cleanup every 2 seconds
-                 setInterval(cleanupSubscriptionModals, 2000);
+                 // Run cleanup only on page load - removed aggressive 2-second interval
+                 setTimeout(cleanupSubscriptionModals, 2000);
                  
-                 // Run cleanup on page load and after a delay
-                 setTimeout(cleanupSubscriptionModals, 1000);
-                 setTimeout(cleanupSubscriptionModals, 3000);
-                 setTimeout(cleanupSubscriptionModals, 5000);
+                 // Optional: Run cleanup when user interacts with page instead of constantly
+                 document.addEventListener('click', () => {
+                     // Debounced cleanup on user interaction
+                     clearTimeout(window.cleanupTimeout);
+                     window.cleanupTimeout = setTimeout(cleanupSubscriptionModals, 1000);
+                 }, { once: true });
         `).catch(console.error);
     });
 }

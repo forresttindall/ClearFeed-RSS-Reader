@@ -5,35 +5,18 @@
   box-sizing: border-box;
 }
 
-/* Dark scrollbar for Webkit browsers (Chrome, Safari, etc.) */
-::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
 
-::-webkit-scrollbar-track {
-  background: #1a1a1a;
-}
 
-::-webkit-scrollbar-thumb {
-  background: #363636;
-  border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-  background: #444444;
-}
-
-/* Dark scrollbar for Firefox */
+/* Theme-aware scrollbar for Firefox */
 * {
   scrollbar-width: thin;
-  scrollbar-color: #363636 #1a1a1a;
+  scrollbar-color: var(--secondary) var(--background);
 }
 
 /* Ensure the app takes full viewport */
 html, body {
   height: 100%;
-  background-color: #1a1a1a;
+  background-color: var(--background);
 }
 
 /* Remove the default styles you don't need */

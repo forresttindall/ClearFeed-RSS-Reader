@@ -10,7 +10,8 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.28.1",
-    "react-scripts": "5.0.1"
+    "react-scripts": "5.0.1",
+    "react-window": "^1.8.11"
   },
   "scripts": {
     "start": "BROWSER=none CHOKIDAR_USEPOLLING=true WATCHPACK_POLLING=true react-scripts start",

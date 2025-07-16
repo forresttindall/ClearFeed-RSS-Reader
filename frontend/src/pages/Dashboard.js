@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, memo, useRef } from 'react';
+import { FixedSizeList as List } from 'react-window';
 import { 
-  List, 
+  List as ListIcon, 
   EyeSlash, 
   Bookmark, 
   MagnifyingGlass, 
@@ -27,113 +28,70 @@ const getElectron = () => {
     return null;
 };
 
-// Component for handling article images with fallbacks
-const ArticleImage = ({ article, feedsMap }) => {
-  const [currentImageSrc, setCurrentImageSrc] = useState(article.imageUrl);
-  const [imageAttempts, setImageAttempts] = useState(0);
+// Optimized ArticleImage component with better loading strategies
+const ArticleImage = memo(({ article, feedsMap }) => {
+  const [hasError, setHasError] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const imgRef = useRef(null);
   
-  const getFallbackImages = (article, feedsMap) => {
-    const fallbacks = [];
+  const getFallbackSrc = useCallback(() => {
+    if (!feedsMap || !article) return null;
     
-    if (article.imageUrl) {
-      fallbacks.push(article.imageUrl);
-    }
-    
-    // Try to get domain from article link or feed URL
-    let domain = null;
     try {
-      if (article.link) {
-        domain = new URL(article.link).hostname;
-      } else if (feedsMap[article.feedId]) {
-        domain = new URL(feedsMap[article.feedId]).hostname;
-      }
+      const url = article.link || feedsMap[article.feedId];
+      const domain = new URL(url).hostname.replace(/^www\./, '');
+      return `https://www.google.com/s2/favicons?domain=${domain}&sz=64`;
     } catch (e) {
-      console.log('Could not parse domain for fallback images:', e);
+      return null;
     }
-    
-    if (domain) {
-      console.log('Trying fallback images for domain:', domain);
-      
-      // Clean domain (remove www. prefix for better matching)
-      const cleanDomain = domain.replace(/^www\./, '');
-      
-      // Site-specific image handling for major news outlets
-      if (cleanDomain.includes('wired.com')) {
-        fallbacks.push('https://www.wired.com/wp-content/themes/wired/assets/images/wired-logo.svg');
-        fallbacks.push('https://www.wired.com/wp-content/themes/wired/assets/images/wired-logo.png');
-        fallbacks.push('https://www.wired.com/favicon.ico');
-      } else if (cleanDomain.includes('bloomberg.com')) {
-        fallbacks.push('https://assets.bwbx.io/images/users/iqjWHBFdfxIU/iKIWgaiJUtss/v2/pidjEfPlU1QWZop3vfGKsrX.ke8XuWirGYh1PKgEw44kE/200x200.png');
-        fallbacks.push('https://www.bloomberg.com/favicon.ico');
-      } else if (cleanDomain.includes('yahoo.com')) {
-        fallbacks.push('https://s.yimg.com/cv/apiv2/social/images/yahoo_default_logo.png');
-        fallbacks.push('https://www.yahoo.com/favicon.ico');
-      } else if (cleanDomain.includes('cnn.com')) {
-        fallbacks.push('https://cdn.cnn.com/cnn/.e/img/3.0/global/misc/cnn-logo.png');
-      } else if (cleanDomain.includes('bbc.com') || cleanDomain.includes('bbc.co.uk')) {
-        fallbacks.push('https://static.files.bbci.co.uk/ws/simorgh-assets/public/news/images/metadata/poster-1024x576.png');
-      } else if (cleanDomain.includes('reuters.com')) {
-        fallbacks.push('https://www.reuters.com/pf/resources/images/reuters/reuters-default.png');
-      } else if (cleanDomain.includes('techcrunch.com')) {
-        fallbacks.push('https://techcrunch.com/wp-content/uploads/2015/02/cropped-cropped-favicon-gradient.png');
-      }
-      
-      // High-resolution favicon services (try both original and clean domain)
-      fallbacks.push(`https://www.google.com/s2/favicons?domain=${domain}&sz=128`);
-      fallbacks.push(`https://www.google.com/s2/favicons?domain=${cleanDomain}&sz=128`);
-      fallbacks.push(`https://icons.duckduckgo.com/ip3/${domain}.ico`);
-      fallbacks.push(`https://icons.duckduckgo.com/ip3/${cleanDomain}.ico`);
-      
-      // Try both original and clean domain for all paths
-      const domains = [domain, cleanDomain];
-      
-      domains.forEach(d => {
-        // Apple touch icons (high resolution)
-        fallbacks.push(`https://${d}/apple-touch-icon-180x180.png`);
-        fallbacks.push(`https://${d}/apple-touch-icon.png`);
-        fallbacks.push(`https://${d}/apple-touch-icon-precomposed.png`);
-        
-        // Standard favicons
-        fallbacks.push(`https://${d}/favicon.ico`);
-        fallbacks.push(`https://${d}/favicon.png`);
-        
-        // Social share images (Open Graph)
-        fallbacks.push(`https://${d}/og-image.png`);
-        fallbacks.push(`https://${d}/og-image.jpg`);
-        fallbacks.push(`https://${d}/images/og-image.png`);
-        fallbacks.push(`https://${d}/assets/images/og-image.png`);
-        
-        // Twitter card images
-        fallbacks.push(`https://${d}/twitter-card.png`);
-        fallbacks.push(`https://${d}/twitter-card.jpg`);
-        
-        // Common logo paths
-        fallbacks.push(`https://${d}/logo.png`);
-        fallbacks.push(`https://${d}/logo.svg`);
-        fallbacks.push(`https://${d}/assets/logo.png`);
-        fallbacks.push(`https://${d}/images/logo.png`);
-        fallbacks.push(`https://${d}/static/logo.png`);
-        fallbacks.push(`https://${d}/img/logo.png`);
-      });
-    }
-    
-    return fallbacks;
-  };
+  }, [article.link, article.feedId, feedsMap]);
   
-  const handleImageError = () => {
-    const fallbacks = getFallbackImages(article, feedsMap);
-    const nextAttempt = imageAttempts + 1;
-    
-    if (nextAttempt < fallbacks.length) {
-      setCurrentImageSrc(fallbacks[nextAttempt]);
-      setImageAttempts(nextAttempt);
-    } else {
-      // All fallbacks failed, show placeholder
-      setCurrentImageSrc(null);
-    }
-  };
+  const handleImageLoad = useCallback(() => {
+    setIsLoaded(true);
+  }, []);
   
-  if (!currentImageSrc) {
+  const handleImageError = useCallback(() => {
+    setHasError(true);
+  }, []);
+  
+  // Optimize image URLs for faster loading - be more conservative
+  const optimizedImageUrl = useMemo(() => {
+    if (!article.imageUrl) return null;
+    
+    // For common image services, add size parameters for faster loading
+    const url = article.imageUrl;
+    
+    // Only optimize NASA images which we know support size parameters
+    if (url.includes('nasa.gov') && url.includes('wp-content/uploads')) {
+      return url.includes('?') ? `${url}&w=400` : `${url}?w=400`;
+    }
+    
+    // Return original URL for better compatibility
+    return url;
+  }, [article.imageUrl]);
+  
+  // Show placeholder immediately if no image URL or after error
+  if (!optimizedImageUrl || hasError) {
+    const fallbackSrc = getFallbackSrc();
+    
+    if (fallbackSrc && !hasError) {
+      return (
+        <img 
+          src={fallbackSrc}
+          alt=""
+          onError={handleImageError}
+          onLoad={handleImageLoad}
+          style={{ 
+            width: '32px', 
+            height: '32px', 
+            objectFit: 'contain',
+            opacity: isLoaded ? 1 : 0.7,
+            transition: 'opacity 0.15s ease'
+          }}
+        />
+      );
+    }
+    
     return (
       <div className="article-image-placeholder">
         <Newspaper size={32} />
@@ -143,15 +101,136 @@ const ArticleImage = ({ article, feedsMap }) => {
   
   return (
     <img 
-      src={currentImageSrc}
+      ref={imgRef}
+      src={optimizedImageUrl}
       alt=""
       onError={handleImageError}
-      onLoad={() => console.log('Image loaded successfully:', currentImageSrc)}
+      onLoad={handleImageLoad}
+      loading="lazy"
+      decoding="async"
+      fetchpriority="low"
+      style={{
+        opacity: isLoaded ? 1 : 0.7,
+        transition: 'opacity 0.15s ease',
+        maxWidth: '100%',
+        height: 'auto'
+      }}
     />
   );
-};
+});
 
 
+
+// Memoized ArticleCard component to prevent unnecessary re-renders
+const ArticleCard = memo(({ article, feedsMap, readLater, onArticleClick, onToggleReadLater, formatTimestamp, simplifyUrl }) => (
+  <article 
+    className={`article-card ${article.read ? 'read' : ''}`}
+    onClick={() => onArticleClick(article)}
+  >
+    <div className="article-image-container">
+      <ArticleImage article={article} feedsMap={feedsMap} />
+    </div>
+    <div className="article-content">
+      <div className="article-header">
+        <div className="article-meta">
+          <h2>
+            <a 
+              href={article.link} 
+              onClick={(e) => {
+                e.preventDefault();
+                onArticleClick(article);
+              }}
+            >
+              {article.title}
+            </a>
+          </h2>
+          
+          {article.description && (
+            <p className="article-description">
+              {article.description}
+            </p>
+          )}
+          
+          <div className="article-info">
+            {feedsMap[article.feedId] && (
+              <span className="article-source">
+                {simplifyUrl(feedsMap[article.feedId])}
+              </span>
+            )}
+            {article.author && (
+              <span className="article-author">
+                • {article.author}
+              </span>
+            )}
+            <span className="article-date">
+              • {formatTimestamp(article.publishedAt)}
+            </span>
+          </div>
+        </div>
+        <button 
+          className={`save-btn ${readLater.includes(article.id) ? 'active' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleReadLater(article.id);
+          }}
+          title={readLater.includes(article.id) ? 'Saved' : 'Save for later'}
+        >
+          <Bookmark 
+            size={20}
+            weight={readLater.includes(article.id) ? "fill" : "regular"}
+          />
+        </button>
+      </div>
+    </div>
+  </article>
+));
+
+// Virtualized row component for react-window - optimized for performance
+const VirtualizedArticleRow = memo(({ index, style, data }) => {
+  const { 
+    articles, 
+    feedsMap, 
+    readLater, 
+    onArticleClick, 
+    onToggleReadLater, 
+    formatTimestamp, 
+    simplifyUrl 
+  } = data;
+  
+  const article = articles[index];
+  
+  if (!article) return null;
+  
+  const isReadLater = readLater.includes(article.id);
+  const feedUrl = feedsMap[article.feedId];
+  
+  return (
+    <div style={style} className="virtualized-item">
+      <ArticleCard 
+        article={article}
+        feedsMap={feedsMap}
+        readLater={readLater}
+        onArticleClick={onArticleClick}
+        onToggleReadLater={onToggleReadLater}
+        formatTimestamp={formatTimestamp}
+        simplifyUrl={simplifyUrl}
+      />
+    </div>
+  );
+}, (prevProps, nextProps) => {
+  // Custom comparison for better performance
+  const prevArticle = prevProps.data.articles[prevProps.index];
+  const nextArticle = nextProps.data.articles[nextProps.index];
+  
+  if (!prevArticle || !nextArticle) return false;
+  
+  return (
+    prevArticle.id === nextArticle.id &&
+    prevProps.data.readLater.includes(prevArticle.id) === nextProps.data.readLater.includes(nextArticle.id) &&
+    prevProps.style.top === nextProps.style.top &&
+    prevProps.style.height === nextProps.style.height
+  );
+});
 
 function Dashboard() {
   
@@ -159,7 +238,7 @@ function Dashboard() {
     localStorage.getItem('theme') || 'dark'
   );
   const [font, setFont] = useState(() => 
-    localStorage.getItem('font') || 'mono'
+    localStorage.getItem('font') || 'sans'
   );
   const [feeds, setFeeds] = useState([]);
   const [articles, setArticles] = useState([]);
@@ -177,66 +256,90 @@ function Dashboard() {
   const [retentionDays, setRetentionDays] = useState(() => 
     parseInt(localStorage.getItem('retentionDays')) || 30
   );
-
   const [savedScrollPosition, setSavedScrollPosition] = useState(0);
   const [showDatabaseSettings, setShowDatabaseSettings] = useState(false);
+  
+  // Ref for the virtualized list
+  const listRef = useRef(null);
 
 
 
-  // Fetch feeds on component mount
-  useEffect(() => {
+  // Optimized theme and font handlers
+  const handleThemeChange = useCallback(() => {
+    const newTheme = theme === 'dark' ? '' : 'dark';
     
-    const initializeApp = async () => {
-        // Wait a bit to ensure electron is initialized
-        await new Promise(resolve => setTimeout(resolve, 100));
-        
-        const electronInstance = getElectron();
-        if (!electronInstance) {
-            console.error('Electron not available after initialization');
-            return;
-        }
+    // Apply theme immediately to DOM for instant switching
+    document.documentElement.className = newTheme;
+    localStorage.setItem('theme', newTheme);
+    
+    // Update state after DOM change
+    setTheme(newTheme);
+  }, [theme]);
 
-        try {
-            await fetchFeeds();
-            await fetchArticles();
-        } catch (error) {
-            console.error('Error initializing app:', error);
-        }
+  const handleFontChange = useCallback(() => {
+    const newFont = font === 'mono' ? 'sans' : 'mono';
+    
+    // Apply font immediately to DOM
+    document.documentElement.style.fontFamily = 
+      newFont === 'mono' ? "'Geist Mono', monospace" : "'Geist Sans', sans-serif";
+    localStorage.setItem('font', newFont);
+    
+    // Update state after DOM change
+    setFont(newFont);
+  }, [font]);
+
+  // Remove separate useEffect hooks since we handle DOM updates directly
+
+  // Initialize theme and font on mount
+  useEffect(() => {
+    // Apply saved theme and font immediately on mount
+    document.documentElement.className = theme;
+    document.documentElement.style.fontFamily = 
+      font === 'mono' ? "'Geist Mono', monospace" : "'Geist Sans', sans-serif";
+  }, [theme, font]); // Apply when theme or font changes
+
+  // Click outside to close settings menu
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showSettings && !event.target.closest('.settings-dropdown') && !event.target.closest('.icon-button')) {
+        setShowSettings(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showSettings]);
+
+  // Single initialization effect
+  useEffect(() => {
+    const initializeApp = async () => {
+      // Wait briefly for electron initialization
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      const electronInstance = getElectron();
+      if (!electronInstance) {
+        console.error('Electron not available after initialization');
+        return;
+      }
+
+      try {
+        await fetchFeeds();
+        await fetchArticles();
+      } catch (error) {
+        console.error('Error initializing app:', error);
+      }
     };
 
     initializeApp();
-  }, []);
-
-  // Update localStorage when preferences change
-  useEffect(() => {
-    localStorage.setItem('theme', theme);
-  }, [theme]);
-
-  useEffect(() => {
-    localStorage.setItem('font', font);
-  }, [font]);
+  }, []); // Only run once on mount
 
   useEffect(() => {
     localStorage.setItem('retentionDays', retentionDays.toString());
   }, [retentionDays]);
 
-  // Apply mono font to the entire document
-  useEffect(() => {
-    document.documentElement.style.fontFamily = 
-      font === 'mono' ? "'Geist Mono', monospace" : "'Geist Sans', sans-serif";
-  }, [font]);
-
-
-
-  // Also add this useEffect to set the initial theme on body
-  useEffect(() => {
-    const savedTheme = localStorage.getItem('theme') || 'dark';
-    setTheme(savedTheme);
-    document.documentElement.className = savedTheme;
-    console.log('Theme initialized:', savedTheme);
-  }, []);
-
-  const fetchFeeds = async () => {
+  const fetchFeeds = useCallback(async () => {
     const electronInstance = getElectron();
     if (!electronInstance?.ipcRenderer) {
         throw new Error('IPC not available');
@@ -254,11 +357,9 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching feeds:', error);
     }
-  };
+  }, []);
 
-
-
-  const fetchArticles = async () => {
+  const fetchArticles = useCallback(async () => {
     const electronInstance = getElectron();
     if (!electronInstance?.ipcRenderer) {
         throw new Error('IPC not available');
@@ -270,14 +371,13 @@ function Dashboard() {
     } catch (error) {
       console.error('Error fetching articles:', error);
     }
-  };
+  }, []);
 
-  const addFeed = async () => {
-    console.log('Add feed clicked');
+  const addFeed = useCallback(async () => {
     setShowAddFeedModal(true);
-  };
+  }, []);
 
-  const handleDatabaseCleanupFromSettings = async () => {
+  const handleDatabaseCleanupFromSettings = useCallback(async () => {
     const electronInstance = getElectron();
     if (!electronInstance?.ipcRenderer) {
         console.error('IPC not available');
@@ -292,7 +392,6 @@ function Dashboard() {
       const result = await electronInstance.ipcRenderer.invoke('cleanup-database', { retentionDays });
       
       if (result.success) {
-        console.log('Database cleanup result:', result);
         // Refresh the UI with updated data
         await fetchArticles();
         
@@ -304,9 +403,9 @@ function Dashboard() {
       console.error('Error during database cleanup:', error);
       alert('Error during cleanup: ' + error.message);
     }
-  };
+  }, [retentionDays, fetchArticles]);
 
-  const handleAddFeedSubmit = async () => {
+  const handleAddFeedSubmit = useCallback(async () => {
     const electronInstance = getElectron();
     if (!electronInstance) {
         console.error('No electron object found');
@@ -323,9 +422,7 @@ function Dashboard() {
     if (!newFeedUrl) return;
 
     try {
-        console.log('Attempting to add feed:', newFeedUrl);
         const result = await electronInstance.ipcRenderer.invoke('add-feed', { url: newFeedUrl });
-        console.log('Add feed result:', result);
         
         if (result.success) {
             await fetchFeeds();
@@ -342,48 +439,46 @@ function Dashboard() {
         console.error('Error adding feed:', error);
         alert(error.message);
     }
-  };
+  }, [newFeedUrl, fetchFeeds, fetchArticles]);
 
-  const filteredArticles = articles
-    .filter(article => {
-      // Filter by feed
-      if (selectedFeed && article.feedId !== selectedFeed) return false;
-      
-      // Filter by search term
-      if (searchTerm && !article.title.toLowerCase().includes(searchTerm.toLowerCase())) return false;
-      
-      // Filter by read later
-      if (showReadLater && !readLater.includes(article.id)) return false;
-      
-      // Filter by unread
-      if (showUnread && article.read) {
-        console.log('Filtering out read article:', article.id);
-        return false;
-      }
-      
-      return true;
-    })
-    .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  const filteredArticles = useMemo(() => {
+    if (!articles.length) return [];
+    
+    let filtered = articles;
+    
+    // Apply filters in order of selectivity (most selective first)
+    if (selectedFeed) {
+      filtered = filtered.filter(article => article.feedId === selectedFeed);
+    }
+    
+    if (showReadLater) {
+      filtered = filtered.filter(article => readLater.includes(article.id));
+    }
+    
+    if (showUnread) {
+      filtered = filtered.filter(article => !article.read);
+    }
+    
+    if (searchTerm) {
+      const lowerSearchTerm = searchTerm.toLowerCase();
+      filtered = filtered.filter(article => 
+        article.title.toLowerCase().includes(lowerSearchTerm)
+      );
+    }
+    
+    // Sort by date (newest first)
+    return filtered.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+  }, [articles, selectedFeed, searchTerm, showReadLater, readLater, showUnread]);
 
-  const toggleReadLater = (articleId) => {
+  const toggleReadLater = useCallback((articleId) => {
     setReadLater(prev => 
       prev.includes(articleId) 
         ? prev.filter(id => id !== articleId)
         : [...prev, articleId]
     );
-  };
+  }, []);
 
-  // Add this helper function to simplify URLs
-  const simplifyUrl = (url) => {
-    try {
-      const domain = new URL(url).hostname;
-      return domain.replace(/^www\./, '');
-    } catch (e) {
-      return url;
-    }
-  };
-
-  const markAsRead = async (articleId) => {
+  const markAsRead = useCallback(async (articleId) => {
     const electronInstance = getElectron();
     if (!electronInstance?.ipcRenderer) {
         console.error('IPC not available');
@@ -404,45 +499,10 @@ function Dashboard() {
     } catch (error) {
       console.error('Error marking article as read:', error);
     }
-  };
-
-  const deleteFeed = async (feedId) => {
-    const electronInstance = getElectron();
-    if (!electronInstance?.ipcRenderer) {
-        alert('Error: IPC not available. Please restart the application.');
-        return;
-    }
-    
-    const feedName = feedsMap[feedId] ? simplifyUrl(feedsMap[feedId]) : 'this feed';
-    if (!window.confirm(`Are you sure you want to remove ${feedName}? All articles from this feed will also be removed.`)) {
-        return;
-    }
-
-    try {
-        const result = await electronInstance.ipcRenderer.invoke('delete-feed', { id: feedId });
-        if (result.success) {
-            setFeeds(prevFeeds => prevFeeds.filter(feed => feed.id !== feedId));
-            setArticles(prevArticles => prevArticles.filter(article => article.feedId !== feedId));
-            if (selectedFeed === feedId) {
-                setSelectedFeed(null);
-            }
-            // Show success message
-            alert(result.message);
-        }
-    } catch (error) {
-        console.error('Error deleting feed:', error);
-        alert('Error removing feed: ' + error.message);
-    }
-  };
-
-  // Add this useEffect to handle feed updates
-  useEffect(() => {
-    fetchFeeds();
-    fetchArticles();
-  }, []); // Only run on mount
+  }, []);
 
   // Add this helper function at the top of your component
-  const formatTimestamp = (dateString) => {
+  const formatTimestamp = useCallback((dateString) => {
     const date = new Date(dateString);
     const now = new Date();
     const diff = (now - date) / 1000; // difference in seconds
@@ -470,7 +530,67 @@ function Dashboard() {
       hour: '2-digit',
       minute: '2-digit'
     });
-  };
+  }, []);
+
+  const handleArticleClick = useCallback(async (article) => {
+    // Save current scroll position from virtualized list
+    if (listRef.current) {
+      setSavedScrollPosition(listRef.current.state.scrollOffset);
+    }
+    
+    await markAsRead(article.id);
+    setSelectedArticle(article);
+  }, [markAsRead]);
+
+  // Add this helper function to simplify URLs
+  const simplifyUrl = useCallback((url) => {
+    try {
+      const domain = new URL(url).hostname;
+      return domain.replace(/^www\./, '');
+    } catch (e) {
+      return url;
+    }
+  }, []);
+
+  // Memoize itemData to prevent unnecessary re-renders of virtualized list
+  const itemData = useMemo(() => ({
+    articles: filteredArticles,
+    feedsMap,
+    readLater,
+    onArticleClick: handleArticleClick,
+    onToggleReadLater: toggleReadLater,
+    formatTimestamp,
+    simplifyUrl
+  }), [filteredArticles, feedsMap, readLater, handleArticleClick, toggleReadLater, formatTimestamp, simplifyUrl]);
+
+  const deleteFeed = useCallback(async (feedId) => {
+    const electronInstance = getElectron();
+    if (!electronInstance?.ipcRenderer) {
+        alert('Error: IPC not available. Please restart the application.');
+        return;
+    }
+    
+    const feedName = feedsMap[feedId] ? simplifyUrl(feedsMap[feedId]) : 'this feed';
+    if (!window.confirm(`Are you sure you want to remove ${feedName}? All articles from this feed will also be removed.`)) {
+        return;
+    }
+
+    try {
+        const result = await electronInstance.ipcRenderer.invoke('delete-feed', { id: feedId });
+        if (result.success) {
+            setFeeds(prevFeeds => prevFeeds.filter(feed => feed.id !== feedId));
+            setArticles(prevArticles => prevArticles.filter(article => article.feedId !== feedId));
+            if (selectedFeed === feedId) {
+                setSelectedFeed(null);
+            }
+            // Show success message
+            alert(result.message);
+        }
+    } catch (error) {
+        console.error('Error deleting feed:', error);
+        alert('Error removing feed: ' + error.message);
+    }
+  }, [feedsMap, simplifyUrl, selectedFeed]);
 
 
   const handleRefresh = async () => {
@@ -506,25 +626,13 @@ function Dashboard() {
     }
   };
 
-  const handleArticleClick = async (article) => {
-    // Save current scroll position before navigating to article
-    const feedContentElement = document.querySelector('.feed-content');
-    if (feedContentElement) {
-      setSavedScrollPosition(feedContentElement.scrollTop);
-    }
-    
-    await markAsRead(article.id);
-    setSelectedArticle(article);
-  };
-
   const handleBackToFeed = () => {
     setSelectedArticle(null);
     
     // Restore scroll position after the component re-renders
     setTimeout(() => {
-      const feedContentElement = document.querySelector('.feed-content');
-      if (feedContentElement) {
-        feedContentElement.scrollTop = savedScrollPosition;
+      if (listRef.current) {
+        listRef.current.scrollTo(savedScrollPosition);
       }
     }, 0);
   };
@@ -613,12 +721,7 @@ function Dashboard() {
                     <input 
                       type="checkbox" 
                       checked={theme === 'dark'}
-                      onChange={() => {
-                        const newTheme = theme === 'dark' ? '' : 'dark';
-                        setTheme(newTheme);
-                        localStorage.setItem('theme', newTheme);
-                        document.documentElement.classList.toggle('dark');
-                      }}
+                      onChange={handleThemeChange}
                     />
                     <span className="slider"></span>
                   </label>
@@ -630,7 +733,7 @@ function Dashboard() {
                     <input 
                       type="checkbox" 
                       checked={font === 'mono'}
-                      onChange={() => setFont(font === 'mono' ? 'sans' : 'mono')}
+                      onChange={handleFontChange}
                     />
                     <span className="slider"></span>
                   </label>
@@ -762,7 +865,7 @@ function Dashboard() {
                         className={`feed-item ${selectedFeed === feed.id ? 'active' : ''}`}
                         onClick={() => setSelectedFeed(feed.id)}
                       >
-                        <List size={18} />
+                        <ListIcon size={18} />
                         <span className="feed-title">{simplifyUrl(feed.url)}</span>
                       </button>
                       <div className="feed-actions">
@@ -806,75 +909,61 @@ function Dashboard() {
                         }}
                         onLoad={(e) => {
                             console.log('Iframe loaded successfully for:', selectedArticle.link);
+                            
+                            // Inject CSS to fix scrollbar styling
+                            try {
+                                const iframe = e.target;
+                                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                                
+                                // Create style element for scrollbar
+                                const style = iframeDoc.createElement('style');
+                                style.textContent = `
+                                    /* Theme-aware scrollbar for iframe content */
+                                    ::-webkit-scrollbar {
+                                        width: 10px;
+                                        height: 10px;
+                                    }
+                                    
+                                    ::-webkit-scrollbar-track {
+                                        background: ${theme === 'dark' ? '#1a1a1a' : '#f5f5f5'};
+                                    }
+                                    
+                                    ::-webkit-scrollbar-thumb {
+                                        background: ${theme === 'dark' ? '#363636' : '#cccccc'};
+                                        border-radius: 5px;
+                                    }
+                                    
+                                    ::-webkit-scrollbar-thumb:hover {
+                                        background: ${theme === 'dark' ? '#444444' : '#999999'};
+                                    }
+                                    
+                                    /* Firefox scrollbar */
+                                    * {
+                                        scrollbar-width: thin;
+                                        scrollbar-color: ${theme === 'dark' ? '#363636 #1a1a1a' : '#cccccc #f5f5f5'};
+                                    }
+                                `;
+                                
+                                iframeDoc.head.appendChild(style);
+                            } catch (err) {
+                                // Cross-origin iframe, can't inject styles
+                                console.log('Cannot inject styles into cross-origin iframe');
+                            }
                         }}
                     />
                 </div>
             ) : (
                 filteredArticles.length > 0 ? (
                     <div className="articles-list">
-                        {filteredArticles.map((article) => (
-                            <article 
-                                key={article.id} 
-                                className={`article-card ${article.read ? 'read' : ''}`}
-                                onClick={() => handleArticleClick(article)}
-                            >
-                                <div className="article-image-container">
-                                    <ArticleImage article={article} feedsMap={feedsMap} />
-                                </div>
-                                <div className="article-content">
-                                    <div className="article-header">
-                                        <div className="article-meta">
-                                            <h2>
-                                                <a 
-                                                    href={article.link} 
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        handleArticleClick(article);
-                                                    }}
-                                                >
-                                                    {article.title}
-                                                </a>
-                                            </h2>
-                                            
-                                            {article.description && (
-                                                <p className="article-description">
-                                                    {article.description}
-                                                </p>
-                                            )}
-                                            
-                                            <div className="article-info">
-                                                {feedsMap[article.feedId] && (
-                                                    <span className="article-source">
-                                                        {simplifyUrl(feedsMap[article.feedId])}
-                                                    </span>
-                                                )}
-                                                {article.author && (
-                                                    <span className="article-author">
-                                                        • {article.author}
-                                                    </span>
-                                                )}
-                                                <span className="article-date">
-                                                    • {formatTimestamp(article.publishedAt)}
-                                                </span>
-                                            </div>
-                                        </div>
-                                        <button 
-                                            className={`save-btn ${readLater.includes(article.id) ? 'active' : ''}`}
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                toggleReadLater(article.id);
-                                            }}
-                                            title={readLater.includes(article.id) ? 'Saved' : 'Save for later'}
-                                        >
-                                            <Bookmark 
-                                                size={20}
-                                                weight={readLater.includes(article.id) ? "fill" : "regular"}
-                                            />
-                                        </button>
-                                    </div>
-                                </div>
-                            </article>
-                        ))}
+                        <List
+                            ref={listRef}
+                            height={window.innerHeight - 120} // Adjust based on your header height
+                            itemCount={filteredArticles.length}
+                            itemSize={200} // Approximate height of each article card
+                            itemData={itemData}
+                        >
+                            {VirtualizedArticleRow}
+                        </List>
                     </div>
                 ) : (
                     <div className="empty-state">
@@ -886,8 +975,8 @@ function Dashboard() {
         </main>
       </div>
       {showAddFeedModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onContextMenu={(e) => e.stopPropagation()}>
+          <div className="modal-content" onContextMenu={(e) => e.stopPropagation()}>
             <h2>Add RSS Feed</h2>
             <input
               type="text"
@@ -896,84 +985,30 @@ function Dashboard() {
               placeholder="Enter RSS feed URL"
               className="feed-input"
               onContextMenu={(e) => {
-                e.preventDefault();
-                const input = e.target;
-                const menu = document.createElement('div');
-                menu.className = 'context-menu';
-                menu.innerHTML = `
-                  <div class="context-menu-item" data-action="paste">Paste</div>
-                  <div class="context-menu-item" data-action="cut">Cut</div>
-                  <div class="context-menu-item" data-action="copy">Copy</div>
-                  <div class="context-menu-item" data-action="selectall">Select All</div>
-                `;
-                
-                menu.style.position = 'fixed';
-                menu.style.left = e.clientX + 'px';
-                menu.style.top = e.clientY + 'px';
-                menu.style.zIndex = '10000';
-                
-                document.body.appendChild(menu);
-                
-                const handleMenuClick = async (menuEvent) => {
-                  const action = menuEvent.target.dataset.action;
-                  
-                  switch(action) {
-                    case 'paste':
-                      try {
-                        // First try the modern clipboard API
-                        const text = await navigator.clipboard.readText();
-                        console.log('✅ Clipboard read successful:', text.substring(0, 50) + '...');
-                        setNewFeedUrl(text);
-                      } catch (err) {
-                        console.log('🚫 Clipboard read failed, trying execCommand:', err);
-                        try {
-                          // Fallback to execCommand
-                          input.focus();
-                          input.select();
-                          const success = document.execCommand('paste');
-                          if (success) {
-                            console.log('✅ execCommand paste successful');
-                            // Get the value after paste
-                            setTimeout(() => {
-                              setNewFeedUrl(input.value);
-                            }, 10);
-                          } else {
-                            console.log('🚫 execCommand paste failed');
-                          }
-                        } catch (execErr) {
-                          console.log('🚫 execCommand paste error:', execErr);
-                        }
-                      }
-                      break;
-                    case 'cut':
-                      input.select();
-                      document.execCommand('cut');
-                      setNewFeedUrl('');
-                      break;
-                    case 'copy':
-                      input.select();
-                      document.execCommand('copy');
-                      break;
-                    case 'selectall':
-                      input.select();
-                      break;
-                  }
-                  
-                  document.body.removeChild(menu);
-                  document.removeEventListener('click', handleOutsideClick);
-                };
-                
-                const handleOutsideClick = (outsideEvent) => {
-                  if (!menu.contains(outsideEvent.target)) {
-                    document.body.removeChild(menu);
-                    document.removeEventListener('click', handleOutsideClick);
-                  }
-                };
-                
-                menu.addEventListener('click', handleMenuClick);
-                setTimeout(() => {
-                  document.addEventListener('click', handleOutsideClick);
-                }, 0);
+                // Allow context menu for this input - prevent any blocking
+                e.stopPropagation();
+                console.log('Context menu allowed on RSS input');
+                return true;
+              }}
+              onPaste={async (e) => {
+                // Simplified paste handling without heavy DOM manipulation
+                try {
+                  const text = await navigator.clipboard.readText();
+                  setNewFeedUrl(text);
+                } catch (err) {
+                  // Fallback to default paste behavior
+                  console.log('Using default paste behavior');
+                }
+              }}
+              onKeyDown={(e) => {
+                // Allow Ctrl+V paste
+                if (e.ctrlKey && e.key === 'v') {
+                  e.stopPropagation();
+                }
+                // Submit on Enter
+                if (e.key === 'Enter') {
+                  handleAddFeedSubmit();
+                }
               }}
             />
             <div className="modal-buttons">
