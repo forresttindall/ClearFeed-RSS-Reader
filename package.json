@@ -37,6 +37,7 @@
     ],
     "nodeGypRebuild": false,
     "buildDependenciesFromSource": false,
+    "npmRebuild": false,
     "directories": {
       "buildResources": "assets",
       "output": "dist"
@@ -110,7 +111,7 @@
     }
   },
   "dependencies": {
-    "better-sqlite3": "^11.10.0",
+    "better-sqlite3": "^11.5.0",
     "cors": "^2.8.5",
     "electron-is-dev": "^2.0.0",
     "electron-store": "^8.1.0",

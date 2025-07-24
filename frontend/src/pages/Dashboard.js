@@ -44,7 +44,7 @@ const ArticleImage = memo(({ article, feedsMap }) => {
     } catch (e) {
       return null;
     }
-  }, [article.link, article.feedId, feedsMap]);
+  }, [article, feedsMap]);
   
   const handleImageLoad = useCallback(() => {
     setIsLoaded(true);
@@ -201,9 +201,6 @@ const VirtualizedArticleRow = memo(({ index, style, data }) => {
   
   if (!article) return null;
   
-  const isReadLater = readLater.includes(article.id);
-  const feedUrl = feedsMap[article.feedId];
-  
   return (
     <div style={style} className="virtualized-item">
       <ArticleCard 
@@ -256,8 +253,10 @@ function Dashboard() {
   const [retentionDays, setRetentionDays] = useState(() => 
     parseInt(localStorage.getItem('retentionDays')) || 30
   );
-  const [savedScrollPosition, setSavedScrollPosition] = useState(0);
   const [showDatabaseSettings, setShowDatabaseSettings] = useState(false);
+  
+  // Scroll position tracking for each feed
+  const [feedScrollPositions, setFeedScrollPositions] = useState({});
   
   // Ref for the virtualized list
   const listRef = useRef(null);
@@ -313,6 +312,7 @@ function Dashboard() {
   }, [showSettings]);
 
   // Single initialization effect
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => {
     const initializeApp = async () => {
       // Wait briefly for electron initialization
@@ -333,11 +333,14 @@ function Dashboard() {
     };
 
     initializeApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []); // Only run once on mount
 
   useEffect(() => {
     localStorage.setItem('retentionDays', retentionDays.toString());
   }, [retentionDays]);
+
+
 
   const fetchFeeds = useCallback(async () => {
     const electronInstance = getElectron();
@@ -470,6 +473,71 @@ function Dashboard() {
     return filtered.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
   }, [articles, selectedFeed, searchTerm, showReadLater, readLater, showUnread]);
 
+  // Effect to restore scroll position when articles change (after feed switch)
+  useEffect(() => {
+    if (filteredArticles.length > 0) {
+      const feedKey = selectedFeed || 'all';
+      const savedPosition = feedScrollPositions[feedKey];
+      
+      if (savedPosition !== undefined) {
+        // Small delay to ensure the list has rendered
+        setTimeout(() => {
+          if (listRef.current) {
+            listRef.current.scrollTo(savedPosition);
+          }
+        }, 10);
+      }
+    }
+  }, [filteredArticles.length, selectedFeed, feedScrollPositions]);
+
+  // Function to save current scroll position for the current feed
+  const saveCurrentScrollPosition = useCallback(() => {
+    if (listRef.current) {
+      const currentScrollOffset = listRef.current.state.scrollOffset;
+      const feedKey = selectedFeed || 'all'; // Use 'all' for All Feeds
+      
+      setFeedScrollPositions(prev => ({
+        ...prev,
+        [feedKey]: currentScrollOffset
+      }));
+    }
+  }, [selectedFeed]);
+
+  // Function to restore scroll position for a feed
+  const restoreScrollPosition = useCallback((feedId) => {
+    const feedKey = feedId || 'all';
+    const savedPosition = feedScrollPositions[feedKey] || 0;
+    
+    // Use setTimeout to ensure the list has rendered with new data
+    setTimeout(() => {
+      if (listRef.current) {
+        listRef.current.scrollTo(savedPosition);
+      }
+    }, 0);
+  }, [feedScrollPositions]);
+
+  // Enhanced feed selection handler that saves/restores scroll positions
+  const handleFeedSelection = useCallback((feedId) => {
+    // Save current scroll position before switching
+    saveCurrentScrollPosition();
+    
+    // Switch to new feed
+    setSelectedFeed(feedId);
+    
+    // Restore scroll position for the new feed after a brief delay
+    setTimeout(() => {
+      restoreScrollPosition(feedId);
+    }, 50);
+  }, [saveCurrentScrollPosition, restoreScrollPosition]);
+
+  // Function to reset all scroll positions (for refresh)
+  const resetScrollPositions = useCallback(() => {
+    setFeedScrollPositions({});
+    if (listRef.current) {
+      listRef.current.scrollTo(0);
+    }
+  }, []);
+
   const toggleReadLater = useCallback((articleId) => {
     setReadLater(prev => 
       prev.includes(articleId) 
@@ -533,14 +601,12 @@ function Dashboard() {
   }, []);
 
   const handleArticleClick = useCallback(async (article) => {
-    // Save current scroll position from virtualized list
-    if (listRef.current) {
-      setSavedScrollPosition(listRef.current.state.scrollOffset);
-    }
+    // Save current scroll position for the current feed before viewing article
+    saveCurrentScrollPosition();
     
     await markAsRead(article.id);
     setSelectedArticle(article);
-  }, [markAsRead]);
+  }, [markAsRead, saveCurrentScrollPosition]);
 
   // Add this helper function to simplify URLs
   const simplifyUrl = useCallback((url) => {
@@ -580,6 +646,14 @@ function Dashboard() {
         if (result.success) {
             setFeeds(prevFeeds => prevFeeds.filter(feed => feed.id !== feedId));
             setArticles(prevArticles => prevArticles.filter(article => article.feedId !== feedId));
+            
+            // Clean up scroll position for deleted feed
+            setFeedScrollPositions(prev => {
+              const newPositions = { ...prev };
+              delete newPositions[feedId];
+              return newPositions;
+            });
+            
             if (selectedFeed === feedId) {
                 setSelectedFeed(null);
             }
@@ -610,6 +684,9 @@ function Dashboard() {
         await fetchFeeds();
         await fetchArticles();
         
+        // Reset scroll positions to top after refresh
+        resetScrollPositions();
+        
         // Show success message if there were new articles
         if (result.newArticles > 0) {
           alert(`Successfully updated! Found ${result.newArticles} new articles from ${result.updatedFeeds} feeds.`);
@@ -629,11 +706,9 @@ function Dashboard() {
   const handleBackToFeed = () => {
     setSelectedArticle(null);
     
-    // Restore scroll position after the component re-renders
+    // Restore scroll position for the current feed
     setTimeout(() => {
-      if (listRef.current) {
-        listRef.current.scrollTo(savedScrollPosition);
-      }
+      restoreScrollPosition(selectedFeed);
     }, 0);
   };
 
@@ -854,7 +929,7 @@ function Dashboard() {
                 <div className={`feeds ${feedsCollapsed ? 'collapsed' : ''}`}>
                   <button 
                     className={`feed-item ${selectedFeed === null ? 'active' : ''}`}
-                    onClick={() => setSelectedFeed(null)}
+                    onClick={() => handleFeedSelection(null)}
                   >
                     <Newspaper size={18} weight="regular" />
                     <span>All Feeds</span>
@@ -863,7 +938,7 @@ function Dashboard() {
                     <div key={feed.id} className="feed-item-container">
                       <button
                         className={`feed-item ${selectedFeed === feed.id ? 'active' : ''}`}
-                        onClick={() => setSelectedFeed(feed.id)}
+                        onClick={() => handleFeedSelection(feed.id)}
                       >
                         <ListIcon size={18} />
                         <span className="feed-title">{simplifyUrl(feed.url)}</span>
@@ -958,8 +1033,9 @@ function Dashboard() {
                         <List
                             ref={listRef}
                             height={window.innerHeight - 120} // Adjust based on your header height
+                            width="100%"
                             itemCount={filteredArticles.length}
-                            itemSize={200} // Approximate height of each article card
+                            itemSize={196}
                             itemData={itemData}
                         >
                             {VirtualizedArticleRow}
@@ -975,8 +1051,8 @@ function Dashboard() {
         </main>
       </div>
       {showAddFeedModal && (
-        <div className="modal-overlay" onContextMenu={(e) => e.stopPropagation()}>
-          <div className="modal-content" onContextMenu={(e) => e.stopPropagation()}>
+        <div className="modal-overlay">
+          <div className="modal-content">
             <h2>Add RSS Feed</h2>
             <input
               type="text"
@@ -984,27 +1060,7 @@ function Dashboard() {
               onChange={(e) => setNewFeedUrl(e.target.value)}
               placeholder="Enter RSS feed URL"
               className="feed-input"
-              onContextMenu={(e) => {
-                // Allow context menu for this input - prevent any blocking
-                e.stopPropagation();
-                console.log('Context menu allowed on RSS input');
-                return true;
-              }}
-              onPaste={async (e) => {
-                // Simplified paste handling without heavy DOM manipulation
-                try {
-                  const text = await navigator.clipboard.readText();
-                  setNewFeedUrl(text);
-                } catch (err) {
-                  // Fallback to default paste behavior
-                  console.log('Using default paste behavior');
-                }
-              }}
               onKeyDown={(e) => {
-                // Allow Ctrl+V paste
-                if (e.ctrlKey && e.key === 'v') {
-                  e.stopPropagation();
-                }
                 // Submit on Enter
                 if (e.key === 'Enter') {
                   handleAddFeedSubmit();

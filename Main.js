@@ -110,6 +110,22 @@ function createWindow() {
         return { action: 'deny' };
     });
     
+    // Enable context menu for right-click functionality
+    const { Menu } = require('electron');
+    mainWindow.webContents.on('context-menu', (event, params) => {
+        // Create a simple context menu for input fields
+        if (params.isEditable || params.inputFieldType !== 'none') {
+            const contextMenu = Menu.buildFromTemplate([
+                { role: 'cut' },
+                { role: 'copy' },
+                { role: 'paste' },
+                { type: 'separator' },
+                { role: 'selectall' }
+            ]);
+            contextMenu.popup();
+        }
+    });
+    
     // Update the existing did-finish-load handler
     mainWindow.webContents.on('did-finish-load', () => {
         console.log('Window loaded, testing IPC availability');
@@ -327,24 +343,7 @@ function createWindow() {
                     }, true);
                 });
                 
-                // Block right-click context menu popups
-                 document.addEventListener('contextmenu', function(e) {
-                     const target = e.target;
-                     // Allow context menu on input fields, textareas, and contenteditable elements
-                     if (target.tagName === 'INPUT' || 
-                         target.tagName === 'TEXTAREA' || 
-                         target.contentEditable === 'true' ||
-                         target.closest('.feed-input') ||
-                         target.closest('.modal-overlay') ||
-                         target.closest('.modal-content')) {
-                         return; // Allow context menu
-                     }
-                     // Block context menu on links and clickable elements
-                     if (target.tagName === 'A' || target.onclick || target.href) {
-                         e.preventDefault();
-                         console.log('Blocked context menu popup');
-                     }
-                 }, true);
+                // Context menu blocking completely removed - allow all right-click functionality
                  
                  // Block suspicious click events that might trigger popups
                  document.addEventListener('click', function(e) {
@@ -668,18 +667,7 @@ function createWindow() {
                     }
                 }, true);
                 
-                // Block all mousedown events that might trigger popups
-                document.addEventListener('mousedown', function(e) {
-                    if (e.button === 1 || e.button === 2) { // Middle or right click
-                        const target = e.target;
-                        if (target.href || target.onclick || target.getAttribute('onclick')) {
-                            console.log('Blocked middle/right-click popup attempt');
-                            e.preventDefault();
-                            e.stopPropagation();
-                            return false;
-                        }
-                    }
-                }, true);
+                // Removed mousedown blocking to allow right-click paste
             }
             
             // Apply popup blocking immediately and on DOM changes
@@ -890,9 +878,9 @@ function createWindow() {
                      clearTimeout(window.cleanupTimeout);
                      window.cleanupTimeout = setTimeout(cleanupSubscriptionModals, 1000);
                  }, { once: true });
-        `).catch(console.error);
-    });
-}
+            `).catch(console.error);
+        });
+    }
 
 // Ad blocking filter lists - common ad domains and tracking scripts
 const adBlockFilters = [
