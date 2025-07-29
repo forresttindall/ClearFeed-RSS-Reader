@@ -155,7 +155,10 @@ Download the appropriate installer for your operating system from the [Releases]
 
 2. Install dependencies:
    ```bash
+   # Install main dependencies
    npm install
+   
+   # Install frontend dependencies
    cd frontend
    npm install
    cd ..
@@ -172,6 +175,16 @@ Download the appropriate installer for your operating system from the [Releases]
    ```bash
    npm start
    ```
+
+### Development Mode
+
+To run in development mode with hot reloading:
+
+```bash
+npm run dev
+```
+
+This will start both the frontend development server and the Electron application.
 
 ### Building Distribution Files
 
