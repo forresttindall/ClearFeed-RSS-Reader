@@ -57,8 +57,8 @@ A free and open-source minimalist RSS feed reader desktop application for Linux,
 Download the appropriate installer for your operating system from the [Releases](https://github.com/forresttindall/ClearFeed-RSS-Reader/releases) page:
 
 #### Windows
-- **ClearFeed-Setup-0.1.0.exe** - Windows installer (recommended)
-- **ClearFeed-0.1.0-win.zip** - Portable Windows version
+- **ClearFeed-Setup-0.1.1.exe** - Windows installer (recommended)
+- **ClearFeed-0.1.1-win.zip** - Portable Windows version
 
 #### macOS
 - **ClearFeed-0.1.0.dmg** - macOS disk image for Intel Macs
@@ -75,7 +75,7 @@ Download the appropriate installer for your operating system from the [Releases]
 ### Installation Instructions
 
 #### Windows
-1. Download **ClearFeed-Setup-0.1.0.exe**
+1. Download **ClearFeed-Setup-0.1.1.exe**
 2. Run the installer and follow the setup wizard
 3. Launch ClearFeed from the Start Menu or Desktop shortcut
 
